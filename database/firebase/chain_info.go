@@ -25,9 +25,7 @@ func getChainInfo(ctx txctx.TxContext, chainID string) (info *types.ChainInfo, e
 		return nil, err
 	}
 	if status.Code(err) != codes.NotFound { // no chain info found, new chain being indexed
-		info := &types.ChainInfo{}
-		info.ChainID = chainID
-		return info, nil
+		return types.DefaultChainInfo(chainID), nil
 	}
 	if err = doc.DataTo(info); err != nil {
 		return nil, err
