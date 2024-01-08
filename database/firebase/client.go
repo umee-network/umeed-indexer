@@ -220,7 +220,7 @@ func LoadCredential() (option.ClientOption, error) {
 // loadConfig returns the firebase config
 func loadConfig() *firebase.Config {
 	return &firebase.Config{
-		ProjectID: getEnvOrDefault(EnvFirebaseProjectID, "umeed-indexer"),
+		ProjectID: getEnvOrDefault(EnvFirebaseProjectID, "umee-testnet-alpha"),
 	}
 }
 
