@@ -3,3 +3,4 @@ build/
 *.log
 .vscode
 .env
+__debug_bin*
