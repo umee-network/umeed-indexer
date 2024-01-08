@@ -7,7 +7,6 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/rs/zerolog"
@@ -47,7 +46,7 @@ func (i *Indexer) Index(ctx context.Context) error {
 // IndexCases handle all the cases for the indexer.
 func (i *Indexer) IndexCases(
 	ctx context.Context,
-	newBlock <-chan ctypes.ResultEvent,
+	cNewBlock <-chan *tmtypes.Block,
 ) error {
 	oneMin := time.NewTicker(time.Minute)
 	defer oneMin.Stop()
@@ -58,12 +57,8 @@ func (i *Indexer) IndexCases(
 		case <-ctx.Done():
 			return i.Close(ctx)
 
-		case blk := <-newBlock: // listen to new blocks being produced.
-			evtBlock, ok := blk.Data.(tmtypes.EventDataNewBlock)
-			if !ok {
-				continue
-			}
-			if err := i.HandleNewBlock(ctx, evtBlock.Block); err != nil {
+		case blk := <-cNewBlock: // listen to new blocks being produced.
+			if err := i.HandleNewBlock(ctx, blk); err != nil {
 				i.logger.Err(err).Msg("error handling block")
 			}
 

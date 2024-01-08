@@ -3,7 +3,6 @@ package idx
 import (
 	"context"
 
-	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
@@ -15,5 +14,5 @@ type Blockchain interface {
 	ChainHeader() (chainID string, height uint64, err error)
 	SetChainHeader(blk *tmtypes.Block)
 	DecodeTx(tx tmtypes.Tx) (sdktypes.Tx, error)
-	SubscribeNewBlock(ctx context.Context) (outNewBlock <-chan ctypes.ResultEvent, err error)
+	SubscribeNewBlock(ctx context.Context) (cNewBlock <-chan *tmtypes.Block, err error)
 }

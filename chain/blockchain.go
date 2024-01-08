@@ -110,25 +110,30 @@ func (b *Blockchain) SubscribeEvents(ctx context.Context) (outNewEvt <-chan ctyp
 }
 
 // SubscribeNewBlock subscribe to every new block.
-func (b *Blockchain) SubscribeNewBlock(ctx context.Context) (outNewBlock <-chan ctypes.ResultEvent, err error) {
-	// chanResultEvtNewBlock, err := b.conn.websocketRPC.Subscribe(ctx, ignoredField, tmtypes.EventQueryNewBlock.String())
-	// if err != nil {
-	// 	return nil, err
-	// }
+func (b *Blockchain) SubscribeNewBlock(ctx context.Context) (cNewBlock <-chan *tmtypes.Block, err error) {
+	chanResultEvtNewBlock, err := b.conn.websocketRPC.Subscribe(ctx, ignoredField, tmtypes.EventQueryNewBlock.String())
+	if err != nil {
+		return nil, err
+	}
 
-	// for {
-	// 	select {
-	// 	// only closes the connections if the context is done.
-	// 	case <-ctx.Done():
-	// 	case blk := <-chanResultEvtNewBlock: // listen to new blocks being produced.
-	// 		evtNewBlock, ok := blk.Data.(tmtypes.EventDataNewBlock)
-	// 		if !ok {
-	// 			continue
-	// 		}
-	// 	}
-	// }
+	channelNewBlock := make(chan *tmtypes.Block, 1)
 
-	return b.conn.websocketRPC.Subscribe(ctx, ignoredField, tmtypes.EventQueryNewBlock.String())
+	go func() {
+		for {
+			select {
+			// only closes the connections if the context is done.
+			case <-ctx.Done():
+			case blk := <-chanResultEvtNewBlock: // listen to new blocks being produced.
+				evtNewBlock, ok := blk.Data.(tmtypes.EventDataNewBlock)
+				if !ok {
+					continue
+				}
+				channelNewBlock <- evtNewBlock.Block
+			}
+		}
+	}()
+
+	return channelNewBlock, nil
 }
 
 // JSONRPCID returns a value for the JSON RPC ID.
