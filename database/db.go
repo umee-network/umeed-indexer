@@ -8,7 +8,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/umee-network/umeed-indexer/database/firebase"
-	"google.golang.org/protobuf/proto"
+	"github.com/umee-network/umeed-indexer/graph/types"
 )
 
 // TypeDB defines the databases available for indexing.
@@ -37,10 +37,12 @@ type Database interface {
 
 	// DeleteChainData delete the chain data and all of its structures inside.
 	DeleteChainData(ctx context.Context, chainID string) error
-	// UpsertChainHeader updates the chain id and current height of chain.
-	UpsertChainHeader(ctx context.Context, chainID string, height int) error
-
-	StoreMsgLiquidate(ctx context.Context, chainID string, txHash []byte, msg proto.Message) error
+	// UpsertChainInfo updates or inserts a chain info structure.
+	UpsertChainInfo(ctx context.Context, info types.ChainInfo) (err error)
+	// GetChainInfo returns the last chainInfo.
+	GetChainInfo(ctx context.Context, chainID string) (info *types.ChainInfo, err error)
+	// StoreMsgLiquidate stores a new msgliquidate updating the CosmosMsgIndexed.
+	StoreMsgLiquidate(ctx context.Context, chainID string, txHash []byte, blockHeight int, msg types.MsgLiquidate) error
 }
 
 // NewDB returns a new database instance based on the specified type.

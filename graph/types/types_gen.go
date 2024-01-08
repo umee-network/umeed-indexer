@@ -14,9 +14,23 @@ type ChainInfo struct {
 }
 
 type CosmosMsgIndexed struct {
-	ProtoMsgName           string                  `json:"protoMsgName" firestore:"msgType"`
+	ProtoMsgName           string                  `json:"protoMsgName" firestore:"protoMsgName"`
 	BlocksIndexed          []*BlockIndexedInterval `json:"blocksIndexed" firestore:"blocksIndexed"`
 	IdxHeighestBlockHeight int                     `json:"idxHeighestBlockHeight" firestore:"idxHeighestBlockHeight"`
+}
+
+type IndexedTx struct {
+	TxHash       string        `json:"txHash" firestore:"txHash"`
+	ProtoMsgName string        `json:"protoMsgName" firestore:"protoMsgName"`
+	BlockHeight  int           `json:"blockHeight" firestore:"blockHeight"`
+	MsgLiquidate *MsgLiquidate `json:"msgLiquidate,omitempty" firestore:"msgLiquidate"`
+}
+
+type MsgLiquidate struct {
+	Liquidator  string `json:"liquidator" firestore:"liquidator"`
+	Borrower    string `json:"borrower" firestore:"borrower"`
+	Repayment   string `json:"repayment" firestore:"repayment"`
+	RewardDenom string `json:"rewardDenom" firestore:"rewardDenom"`
 }
 
 type Query struct {

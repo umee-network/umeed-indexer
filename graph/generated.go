@@ -62,6 +62,20 @@ type ComplexityRoot struct {
 		ProtoMsgName           func(childComplexity int) int
 	}
 
+	IndexedTx struct {
+		BlockHeight  func(childComplexity int) int
+		MsgLiquidate func(childComplexity int) int
+		ProtoMsgName func(childComplexity int) int
+		TxHash       func(childComplexity int) int
+	}
+
+	MsgLiquidate struct {
+		Borrower    func(childComplexity int) int
+		Liquidator  func(childComplexity int) int
+		Repayment   func(childComplexity int) int
+		RewardDenom func(childComplexity int) int
+	}
+
 	Query struct {
 	}
 }
@@ -140,6 +154,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CosmosMsgIndexed.ProtoMsgName(childComplexity), true
+
+	case "IndexedTx.blockHeight":
+		if e.complexity.IndexedTx.BlockHeight == nil {
+			break
+		}
+
+		return e.complexity.IndexedTx.BlockHeight(childComplexity), true
+
+	case "IndexedTx.msgLiquidate":
+		if e.complexity.IndexedTx.MsgLiquidate == nil {
+			break
+		}
+
+		return e.complexity.IndexedTx.MsgLiquidate(childComplexity), true
+
+	case "IndexedTx.protoMsgName":
+		if e.complexity.IndexedTx.ProtoMsgName == nil {
+			break
+		}
+
+		return e.complexity.IndexedTx.ProtoMsgName(childComplexity), true
+
+	case "IndexedTx.txHash":
+		if e.complexity.IndexedTx.TxHash == nil {
+			break
+		}
+
+		return e.complexity.IndexedTx.TxHash(childComplexity), true
+
+	case "MsgLiquidate.borrower":
+		if e.complexity.MsgLiquidate.Borrower == nil {
+			break
+		}
+
+		return e.complexity.MsgLiquidate.Borrower(childComplexity), true
+
+	case "MsgLiquidate.liquidator":
+		if e.complexity.MsgLiquidate.Liquidator == nil {
+			break
+		}
+
+		return e.complexity.MsgLiquidate.Liquidator(childComplexity), true
+
+	case "MsgLiquidate.repayment":
+		if e.complexity.MsgLiquidate.Repayment == nil {
+			break
+		}
+
+		return e.complexity.MsgLiquidate.Repayment(childComplexity), true
+
+	case "MsgLiquidate.rewardDenom":
+		if e.complexity.MsgLiquidate.RewardDenom == nil {
+			break
+		}
+
+		return e.complexity.MsgLiquidate.RewardDenom(childComplexity), true
 
 	}
 	return 0, false
@@ -663,6 +733,365 @@ func (ec *executionContext) fieldContext_CosmosMsgIndexed_idxHeighestBlockHeight
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IndexedTx_txHash(ctx context.Context, field graphql.CollectedField, obj *types.IndexedTx) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_IndexedTx_txHash(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TxHash, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_IndexedTx_txHash(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IndexedTx",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IndexedTx_protoMsgName(ctx context.Context, field graphql.CollectedField, obj *types.IndexedTx) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_IndexedTx_protoMsgName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProtoMsgName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_IndexedTx_protoMsgName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IndexedTx",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IndexedTx_blockHeight(ctx context.Context, field graphql.CollectedField, obj *types.IndexedTx) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_IndexedTx_blockHeight(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BlockHeight, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_IndexedTx_blockHeight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IndexedTx",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IndexedTx_msgLiquidate(ctx context.Context, field graphql.CollectedField, obj *types.IndexedTx) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_IndexedTx_msgLiquidate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MsgLiquidate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*types.MsgLiquidate)
+	fc.Result = res
+	return ec.marshalOMsgLiquidate2ᚖgithubᚗcomᚋumeeᚑnetworkᚋumeedᚑindexerᚋgraphᚋtypesᚐMsgLiquidate(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_IndexedTx_msgLiquidate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IndexedTx",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "liquidator":
+				return ec.fieldContext_MsgLiquidate_liquidator(ctx, field)
+			case "borrower":
+				return ec.fieldContext_MsgLiquidate_borrower(ctx, field)
+			case "repayment":
+				return ec.fieldContext_MsgLiquidate_repayment(ctx, field)
+			case "rewardDenom":
+				return ec.fieldContext_MsgLiquidate_rewardDenom(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MsgLiquidate", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MsgLiquidate_liquidator(ctx context.Context, field graphql.CollectedField, obj *types.MsgLiquidate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MsgLiquidate_liquidator(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Liquidator, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MsgLiquidate_liquidator(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MsgLiquidate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MsgLiquidate_borrower(ctx context.Context, field graphql.CollectedField, obj *types.MsgLiquidate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MsgLiquidate_borrower(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Borrower, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MsgLiquidate_borrower(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MsgLiquidate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MsgLiquidate_repayment(ctx context.Context, field graphql.CollectedField, obj *types.MsgLiquidate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MsgLiquidate_repayment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Repayment, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MsgLiquidate_repayment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MsgLiquidate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MsgLiquidate_rewardDenom(ctx context.Context, field graphql.CollectedField, obj *types.MsgLiquidate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MsgLiquidate_rewardDenom(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RewardDenom, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MsgLiquidate_rewardDenom(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MsgLiquidate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2720,6 +3149,111 @@ func (ec *executionContext) _CosmosMsgIndexed(ctx context.Context, sel ast.Selec
 	return out
 }
 
+var indexedTxImplementors = []string{"IndexedTx"}
+
+func (ec *executionContext) _IndexedTx(ctx context.Context, sel ast.SelectionSet, obj *types.IndexedTx) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, indexedTxImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("IndexedTx")
+		case "txHash":
+			out.Values[i] = ec._IndexedTx_txHash(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "protoMsgName":
+			out.Values[i] = ec._IndexedTx_protoMsgName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "blockHeight":
+			out.Values[i] = ec._IndexedTx_blockHeight(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "msgLiquidate":
+			out.Values[i] = ec._IndexedTx_msgLiquidate(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var msgLiquidateImplementors = []string{"MsgLiquidate"}
+
+func (ec *executionContext) _MsgLiquidate(ctx context.Context, sel ast.SelectionSet, obj *types.MsgLiquidate) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, msgLiquidateImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MsgLiquidate")
+		case "liquidator":
+			out.Values[i] = ec._MsgLiquidate_liquidator(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "borrower":
+			out.Values[i] = ec._MsgLiquidate_borrower(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "repayment":
+			out.Values[i] = ec._MsgLiquidate_repayment(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rewardDenom":
+			out.Values[i] = ec._MsgLiquidate_rewardDenom(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -3526,6 +4060,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOMsgLiquidate2ᚖgithubᚗcomᚋumeeᚑnetworkᚋumeedᚑindexerᚋgraphᚋtypesᚐMsgLiquidate(ctx context.Context, sel ast.SelectionSet, v *types.MsgLiquidate) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MsgLiquidate(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

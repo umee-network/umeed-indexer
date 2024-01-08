@@ -13,7 +13,7 @@ type ChainInfo {
 }
 
 type CosmosMsgIndexed {
-    protoMsgName: String! @goTag(key: "firestore", value: "msgType")
+    protoMsgName: String! @goTag(key: "firestore", value: "protoMsgName")
     # ordered list of indexed block height interval, never should have an interpolate of block heights indexed.
     blocksIndexed: [BlockIndexedInterval!]! @goTag(key: "firestore", value: "blocksIndexed")
     # the higher block height it was indexed since 0.
@@ -25,6 +25,16 @@ type BlockIndexedInterval {
     idxToBlockHeight: Int! @goTag(key: "firestore", value: "idxToBlockHeight")
 }
 
-# type IndexedTx {
-#     txHash: [Byte]!
-# }
+type IndexedTx {
+    txHash: String! @goTag(key: "firestore", value: "txHash")
+    protoMsgName: String! @goTag(key: "firestore", value: "protoMsgName")
+    blockHeight: Int! @goTag(key: "firestore", value: "blockHeight")
+    msgLiquidate: MsgLiquidate @goTag(key: "firestore", value: "msgLiquidate")
+}
+
+type MsgLiquidate {
+    liquidator: String! @goTag(key: "firestore", value: "liquidator")
+    borrower: String! @goTag(key: "firestore", value: "borrower")
+    repayment: String! @goTag(key: "firestore", value: "repayment")
+    rewardDenom: String! @goTag(key: "firestore", value: "rewardDenom")
+}

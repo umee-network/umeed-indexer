@@ -8,20 +8,21 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	tmtypes "github.com/cometbft/cometbft/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/rs/zerolog"
 	lvgtypes "github.com/umee-network/umee/v6/x/leverage/types"
 	oracletypes "github.com/umee-network/umee/v6/x/oracle/types"
 	"github.com/umee-network/umeed-indexer/database"
+	"github.com/umee-network/umeed-indexer/graph/types"
 )
 
 // Indexer struct responsible for calling blockchain rpc/websocket for data and
 // storing that into the database.
 type Indexer struct {
-	b      Blockchain
-	db     database.Database
-	logger zerolog.Logger
+	b         Blockchain
+	db        database.Database
+	logger    zerolog.Logger
+	chainInfo types.ChainInfo
 }
 
 // NewIndexer returns a new indexer struct with open connections.
@@ -111,7 +112,7 @@ func (i *Indexer) HandleMsg(ctx context.Context, txHash []byte, msg proto.Messag
 		return nil
 	}
 
-	sdk.MsgTypeURL()
+	// sdk.MsgTypeURL()
 
 	t, ok := msg.(*oracletypes.MsgAggregateExchangeRatePrevote)
 	if ok {
@@ -139,7 +140,13 @@ func (i *Indexer) loadChainHeader(ctx context.Context) error {
 		fmt.Printf("\nerr on loadChainHeader %s", err.Error())
 		return err
 	}
-	return i.db.UpsertChainHeader(ctx, chainID, int(height))
+	info, err := i.db.GetChainInfo(ctx, chainID)
+	if err != nil {
+		i.logger.Err(err).Msg("error loading chain info")
+		return err
+	}
+	info.LastBlockHeightReceived = int(height)
+	return i.db.UpsertChainInfo(ctx, *info)
 }
 
 // Close closes all the open connections.

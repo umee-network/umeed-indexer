@@ -13,7 +13,7 @@ run:
 # Generate GraphQL code
 generate:
 	@echo "Generating GraphQL code..."
-	@go run github.com/99designs/gqlgen generate
+	@go run github.com/99designs/gqlgen@v0.17.42 generate
 
 ## Database
 run-firestore:
