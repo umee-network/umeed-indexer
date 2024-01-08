@@ -36,22 +36,18 @@ func NewIndexer(ctx context.Context, b Blockchain, db database.Database, logger 
 
 // Index starts to index transactions.
 func (i *Indexer) Index(ctx context.Context) error {
-	evts, err := i.b.SubscribeEvents(ctx)
-	if err != nil {
-		return err
-	}
 	newBlock, err := i.b.SubscribeNewBlock(ctx)
 	if err != nil {
 		return err
 	}
 
-	return i.IndexCases(ctx, newBlock, evts)
+	return i.IndexCases(ctx, newBlock)
 }
 
 // IndexCases handle all the cases for the indexer.
 func (i *Indexer) IndexCases(
 	ctx context.Context,
-	newBlock, evts <-chan ctypes.ResultEvent,
+	newBlock <-chan ctypes.ResultEvent,
 ) error {
 	oneMin := time.NewTicker(time.Minute)
 	defer oneMin.Stop()
@@ -68,20 +64,11 @@ func (i *Indexer) IndexCases(
 				continue
 			}
 			if err := i.HandleNewBlock(ctx, evtBlock.Block); err != nil {
-				fmt.Printf("\nerror on handling new block %s", err.Error())
+				i.logger.Err(err).Msg("error handling block")
 			}
 
 		case <-oneMin.C: // every minute.
-			// store tickers data into database.
-			fmt.Printf("\nOne minute has passed")
-
-		case evt := <-evts: // at each new event listened.
-			// verifies if it is an expected event and if it is, parses it
-			// and store in the database.
-			// this handler populates the channel for new swap events (chSwap).
-			if err := i.HandleEvt(ctx, evt); err != nil {
-				fmt.Printf("\nerror handling evt %s - %+v", err.Error(), evt)
-			}
+			i.logger.Info().Msg("One minute passed")
 		}
 	}
 }
@@ -89,7 +76,7 @@ func (i *Indexer) IndexCases(
 // HandleNewBlock handles the receive of new block from the chain.
 func (i *Indexer) HandleNewBlock(ctx context.Context, blk *tmtypes.Block) error {
 	i.b.SetChainHeader(blk)
-	fmt.Printf("\nnew block height %d", blk.Height)
+	i.logger.Info().Int64("height", blk.Height).Msg("new block received")
 
 	for _, tx := range blk.Data.Txs {
 		if err := i.HandleTx(ctx, tx); err != nil {
@@ -110,7 +97,8 @@ func (i *Indexer) HandleTx(ctx context.Context, tmTx tmtypes.Tx) error {
 
 	for _, msg := range tx.GetMsgs() {
 		if err := i.HandleMsg(ctx, msg); err != nil {
-			return err
+			i.logger.Err(err).Msg("error handling msg")
+			continue
 		}
 	}
 	return nil
@@ -133,12 +121,6 @@ func (i *Indexer) HandleMsg(ctx context.Context, msg proto.Message) error {
 	}
 	fmt.Printf("\n is NOT msg liquidate")
 
-	return nil
-}
-
-// HandleEvt iterates over modified pools updating it on the store.
-func (i *Indexer) HandleEvt(ctx context.Context, evt ctypes.ResultEvent) error {
-	// fmt.Printf("\n event received query: %+s", evt.Query)
 	return nil
 }
 
@@ -173,4 +155,9 @@ func (i *Indexer) Close(ctx context.Context) error {
 	})
 
 	return g.Wait()
+}
+
+type CosmosMsgIndexed struct {
+	LastBlockHeightIndexed int64
+	MsgType                string
 }

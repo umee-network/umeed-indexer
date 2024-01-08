@@ -106,13 +106,28 @@ func (b *Blockchain) SubscribeEvents(ctx context.Context) (outNewEvt <-chan ctyp
 		tmtypes.EventTypeKey, tmtypes.EventTx,
 	)
 
-	defer fmt.Printf("\nsubscribed events on txs")
 	return b.conn.websocketRPC.Subscribe(ctx, ignoredField, cmtquery.MustParse(queryStr).String())
 }
 
 // SubscribeNewBlock subscribe to every new block.
 func (b *Blockchain) SubscribeNewBlock(ctx context.Context) (outNewBlock <-chan ctypes.ResultEvent, err error) {
-	defer fmt.Printf("\nsubscribed new blocks")
+	// chanResultEvtNewBlock, err := b.conn.websocketRPC.Subscribe(ctx, ignoredField, tmtypes.EventQueryNewBlock.String())
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// for {
+	// 	select {
+	// 	// only closes the connections if the context is done.
+	// 	case <-ctx.Done():
+	// 	case blk := <-chanResultEvtNewBlock: // listen to new blocks being produced.
+	// 		evtNewBlock, ok := blk.Data.(tmtypes.EventDataNewBlock)
+	// 		if !ok {
+	// 			continue
+	// 		}
+	// 	}
+	// }
+
 	return b.conn.websocketRPC.Subscribe(ctx, ignoredField, tmtypes.EventQueryNewBlock.String())
 }
 
@@ -190,4 +205,13 @@ func defaultPaginationRequest() *query.PageRequest {
 	return &query.PageRequest{
 		Limit: defaultLimit,
 	}
+}
+
+// Block returns the block for that given height
+func (b *Blockchain) Block(ctx context.Context, height int64) (*tmtypes.Block, error) {
+	blkResult, err := b.conn.websocketRPC.Block(ctx, &height)
+	if err != nil {
+		return nil, err
+	}
+	return blkResult.Block, nil
 }
