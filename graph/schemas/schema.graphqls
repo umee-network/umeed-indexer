@@ -1,0 +1,30 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+directive @goTag(
+	key: String!
+	value: String
+) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+type ChainInfo {
+    lastBlockHeightReceived: Int! @goTag(key: "firestore", value: "lastBlockHeightReceived")
+    chainID: String! @goTag(key: "firestore", value: "chainID")
+    cosmosMsgs: [CosmosMsgIndexed!]! @goTag(key: "firestore", value: "cosmosMsgs")
+}
+
+type CosmosMsgIndexed {
+    protoMsgName: String! @goTag(key: "firestore", value: "msgType")
+    # ordered list of indexed block height interval, never should have an interpolate of block heights indexed.
+    blocksIndexed: [BlockIndexedInterval!]! @goTag(key: "firestore", value: "blocksIndexed")
+    # the higher block height it was indexed since 0.
+    idxHeighestBlockHeight: Int! @goTag(key: "firestore", value: "idxHeighestBlockHeight")
+}
+
+type BlockIndexedInterval {
+    idxFromBlockHeight: Int! @goTag(key: "firestore", value: "idxFromBlockHeight")
+    idxToBlockHeight: Int! @goTag(key: "firestore", value: "idxToBlockHeight")
+}
+
+# type IndexedTx {
+#     txHash: [Byte]!
+# }

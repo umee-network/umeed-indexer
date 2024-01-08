@@ -8,6 +8,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	tmtypes "github.com/cometbft/cometbft/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/rs/zerolog"
 	lvgtypes "github.com/umee-network/umee/v6/x/leverage/types"
@@ -90,8 +91,9 @@ func (i *Indexer) HandleTx(ctx context.Context, tmTx tmtypes.Tx) error {
 		return err
 	}
 
+	txHash := tmTx.Hash()
 	for _, msg := range tx.GetMsgs() {
-		if err := i.HandleMsg(ctx, msg); err != nil {
+		if err := i.HandleMsg(ctx, txHash, msg); err != nil {
 			i.logger.Err(err).Msg("error handling msg")
 			continue
 		}
@@ -100,7 +102,7 @@ func (i *Indexer) HandleTx(ctx context.Context, tmTx tmtypes.Tx) error {
 }
 
 // HandleMsg handles the receive of new msg from the chain Tx.
-func (i *Indexer) HandleMsg(ctx context.Context, msg proto.Message) error {
+func (i *Indexer) HandleMsg(ctx context.Context, txHash []byte, msg proto.Message) error {
 	// parses to the expected messages.
 	msgLiq, ok := msg.(*lvgtypes.MsgLiquidate)
 	if ok {
@@ -108,6 +110,8 @@ func (i *Indexer) HandleMsg(ctx context.Context, msg proto.Message) error {
 		fmt.Printf("\n msgLiq%+v", msgLiq)
 		return nil
 	}
+
+	sdk.MsgTypeURL()
 
 	t, ok := msg.(*oracletypes.MsgAggregateExchangeRatePrevote)
 	if ok {
@@ -150,9 +154,4 @@ func (i *Indexer) Close(ctx context.Context) error {
 	})
 
 	return g.Wait()
-}
-
-type CosmosMsgIndexed struct {
-	LastBlockHeightIndexed int64
-	MsgType                string
 }

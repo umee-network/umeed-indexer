@@ -10,6 +10,11 @@ build:
 run:
 	go run main.go start
 
+# Generate GraphQL code
+generate:
+	@echo "Generating GraphQL code..."
+	@go run github.com/99designs/gqlgen generate
+
 ## Database
 run-firestore:
 	./scripts/firestore-emulator-run.sh

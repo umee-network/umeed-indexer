@@ -8,6 +8,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/umee-network/umeed-indexer/database/firebase"
+	"google.golang.org/protobuf/proto"
 )
 
 // TypeDB defines the databases available for indexing.
@@ -38,6 +39,8 @@ type Database interface {
 	DeleteChainData(ctx context.Context, chainID string) error
 	// UpsertChainHeader updates the chain id and current height of chain.
 	UpsertChainHeader(ctx context.Context, chainID string, height int) error
+
+	StoreMsgLiquidate(ctx context.Context, chainID string, txHash []byte, msg proto.Message) error
 }
 
 // NewDB returns a new database instance based on the specified type.
