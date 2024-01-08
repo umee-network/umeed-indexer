@@ -12,9 +12,15 @@ import (
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	types "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	umeeapp "github.com/umee-network/umee/v6/app"
+	umeeparams "github.com/umee-network/umee/v6/app/params"
 )
 
 const (
@@ -33,7 +39,8 @@ type Blockchain struct {
 
 	chainID string
 
-	qBank banktypes.QueryClient
+	qBank              banktypes.QueryClient
+	umeeEncodingConfig testutil.TestEncodingConfig
 }
 
 // NewBlockchain returns a new blockchain structure with a RPC connection
@@ -50,12 +57,24 @@ func NewBlockchain(rpc, grpc string) (*Blockchain, error) {
 		return nil, err
 	}
 
+	encodingConfig := umeeparams.MakeEncodingConfig(umeeModBasics()...)
+
 	return &Blockchain{
-		conn:      conn,
-		rpcRespID: 0,
-		chainID:   "",
-		qBank:     banktypes.NewQueryClient(conn.grpcConn),
+		conn:               conn,
+		rpcRespID:          0,
+		chainID:            "",
+		qBank:              banktypes.NewQueryClient(conn.grpcConn),
+		umeeEncodingConfig: encodingConfig,
 	}, nil
+}
+
+func umeeModBasics() (modules []module.AppModuleBasic) {
+	umeeBasicManager := umeeapp.ModuleBasics
+	modules = make([]module.AppModuleBasic, 0, len(umeeBasicManager))
+	for _, v := range umeeBasicManager {
+		modules = append(modules, v)
+	}
+	return modules
 }
 
 // DenomsMetadata queries the chain and returns all the denoms metadata available.
@@ -88,7 +107,7 @@ func (b *Blockchain) SubscribeEvents(ctx context.Context) (outNewEvt <-chan ctyp
 	)
 
 	defer fmt.Printf("\nsubscribed events on txs")
-	return b.conn.websocketRPC.Subscribe(ctx, ignoredField, cmtquery.MustCompile(queryStr).String())
+	return b.conn.websocketRPC.Subscribe(ctx, ignoredField, cmtquery.MustParse(queryStr).String())
 }
 
 // SubscribeNewBlock subscribe to every new block.
@@ -120,6 +139,11 @@ func (b *Blockchain) Close(ctx context.Context) error {
 // SetChainHeader updates the data inside the blockchain as needed.
 func (b *Blockchain) SetChainHeader(blk *tmtypes.Block) {
 	b.chainID = blk.ChainID
+}
+
+// DecodeTx decodes a tx into msgs.
+func (b *Blockchain) DecodeTx(tx tmtypes.Tx) (sdktypes.Tx, error) {
+	return b.umeeEncodingConfig.TxConfig.TxDecoder()(tx)
 }
 
 // ChainHeader queries the chain by the last block height.

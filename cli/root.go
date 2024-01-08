@@ -62,7 +62,7 @@ func CmdStartIndex() *cobra.Command {
 				return err
 			}
 
-			i, err := idx.NewIndexer(ctx, b, db)
+			i, err := idx.NewIndexer(ctx, b, db, logger)
 			if err != nil {
 				return err
 			}

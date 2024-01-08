@@ -9,31 +9,27 @@ import (
 
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/rs/zerolog"
+	lvgtypes "github.com/umee-network/umee/v6/x/leverage/types"
+	oracletypes "github.com/umee-network/umee/v6/x/oracle/types"
 	"github.com/umee-network/umeed-indexer/database"
 )
 
 // Indexer struct responsible for calling blockchain rpc/websocket for data and
 // storing that into the database.
 type Indexer struct {
-	b  Blockchain
-	db database.Database
-}
-
-// Blockchain is the expected blockchain interface the indexer needs to store data in the database.
-type Blockchain interface {
-	ChainID() string
-	ChainHeader() (chainID string, height uint64, err error)
-	SetChainHeader(blk *tmtypes.Block)
-	SubscribeEvents(ctx context.Context) (outNewEvt <-chan ctypes.ResultEvent, err error)
-	SubscribeNewBlock(ctx context.Context) (outNewBlock <-chan ctypes.ResultEvent, err error)
-	Close(ctx context.Context) error
+	b      Blockchain
+	db     database.Database
+	logger zerolog.Logger
 }
 
 // NewIndexer returns a new indexer struct with open connections.
-func NewIndexer(ctx context.Context, b Blockchain, db database.Database) (*Indexer, error) {
+func NewIndexer(ctx context.Context, b Blockchain, db database.Database, logger zerolog.Logger) (*Indexer, error) {
 	i := &Indexer{
-		b:  b,
-		db: db,
+		b:      b,
+		db:     db,
+		logger: logger.With().Str("package", "idx").Logger(),
 	}
 	return i, i.onStart(ctx)
 }
@@ -94,6 +90,48 @@ func (i *Indexer) IndexCases(
 func (i *Indexer) HandleNewBlock(ctx context.Context, blk *tmtypes.Block) error {
 	i.b.SetChainHeader(blk)
 	fmt.Printf("\nnew block height %d", blk.Height)
+
+	for _, tx := range blk.Data.Txs {
+		if err := i.HandleTx(ctx, tx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// HandleTx handles the receive of new Tx from the chain.
+func (i *Indexer) HandleTx(ctx context.Context, tmTx tmtypes.Tx) error {
+	tx, err := i.b.DecodeTx(tmTx)
+	if err != nil {
+		i.logger.Err(err).Msg("error decoding Tx")
+		return err
+	}
+
+	for _, msg := range tx.GetMsgs() {
+		if err := i.HandleMsg(ctx, msg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// HandleMsg handles the receive of new msg from the chain Tx.
+func (i *Indexer) HandleMsg(ctx context.Context, msg proto.Message) error {
+	// parses to the expected messages.
+	msgLiq, ok := msg.(*lvgtypes.MsgLiquidate)
+	if ok {
+		fmt.Printf("\n is msg liquidate %+v", msg.String())
+		fmt.Printf("\n msgLiq%+v", msgLiq)
+		return nil
+	}
+
+	t, ok := msg.(*oracletypes.MsgAggregateExchangeRatePrevote)
+	if ok {
+		fmt.Printf("\n MsgAggregateExchangeRatePrevote%+v", t)
+		return nil
+	}
+	fmt.Printf("\n is NOT msg liquidate")
 
 	return nil
 }
