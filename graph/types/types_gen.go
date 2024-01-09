@@ -14,9 +14,8 @@ type ChainInfo struct {
 }
 
 type CosmosMsgIndexed struct {
-	ProtoMsgName           string                  `json:"protoMsgName" firestore:"protoMsgName"`
-	BlocksIndexed          []*BlockIndexedInterval `json:"blocksIndexed" firestore:"blocksIndexed"`
-	IdxHeighestBlockHeight int                     `json:"idxHeighestBlockHeight" firestore:"idxHeighestBlockHeight"`
+	ProtoMsgName  string                  `json:"protoMsgName" firestore:"protoMsgName"`
+	BlocksIndexed []*BlockIndexedInterval `json:"blocksIndexed" firestore:"blocksIndexed"`
 }
 
 type IndexedTx struct {

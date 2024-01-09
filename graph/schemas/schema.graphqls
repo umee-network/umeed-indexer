@@ -16,8 +16,6 @@ type CosmosMsgIndexed {
     protoMsgName: String! @goTag(key: "firestore", value: "protoMsgName")
     # ordered list of indexed block height interval, never should have an interpolate of block heights indexed.
     blocksIndexed: [BlockIndexedInterval!]! @goTag(key: "firestore", value: "blocksIndexed")
-    # the higher block height it was indexed since 0.
-    idxHeighestBlockHeight: Int! @goTag(key: "firestore", value: "idxHeighestBlockHeight")
 }
 
 type BlockIndexedInterval {

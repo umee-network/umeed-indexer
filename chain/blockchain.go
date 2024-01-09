@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 
 	cmtquery "github.com/cometbft/cometbft/libs/pubsub/query"
@@ -213,10 +215,25 @@ func defaultPaginationRequest() *query.PageRequest {
 }
 
 // Block returns the block for that given height
-func (b *Blockchain) Block(ctx context.Context, height int64) (*tmtypes.Block, error) {
+func (b *Blockchain) Block(ctx context.Context, height int64) (blk *tmtypes.Block, minimumBlkHeight int, err error) {
 	blkResult, err := b.conn.websocketRPC.Block(ctx, &height)
 	if err != nil {
-		return nil, err
+		// usually a node does not have all the blocks, in this case we could parse the last block that node has available and start from there.
+		// "error in json rpc client, with http response metadata: (Status: 200 OK, Protocol HTTP/1.1). RPC error -32603 - Internal error: height 1 is not available, lowest height is 7942001"
+		errString := err.Error()
+		searchStrInErr := fmt.Sprintf("Internal error: height %d is not available, lowest height is ", height)
+		idx := strings.Index(errString, searchStrInErr)
+		// error in json rpc client, with http response metadata: (Status: 200 OK, Protocol HTTP/1.1). RPC error -32603 - Internal error: height 1 is not available, lowest height is 7942001
+		if idx == -1 {
+			return nil, 0, err
+		}
+		lowestBlockHeightOnNode := errString[idx+len(searchStrInErr):]
+		minimumBlkHeight, convErr := strconv.Atoi(lowestBlockHeightOnNode)
+		if convErr != nil {
+			return nil, 0, errors.Join(err, convErr)
+		}
+		return nil, minimumBlkHeight, nil
 	}
-	return blkResult.Block, nil
+	blk = blkResult.Block
+	return blk, int(blk.Height), nil
 }

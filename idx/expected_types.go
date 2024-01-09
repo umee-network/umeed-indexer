@@ -15,4 +15,5 @@ type Blockchain interface {
 	SetChainHeader(blk *tmtypes.Block)
 	DecodeTx(tx tmtypes.Tx) (sdktypes.Tx, error)
 	SubscribeNewBlock(ctx context.Context) (cNewBlock <-chan *tmtypes.Block, err error)
+	Block(ctx context.Context, height int64) (blk *tmtypes.Block, minimumBlkHeight int, err error)
 }
