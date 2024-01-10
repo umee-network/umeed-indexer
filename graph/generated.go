@@ -51,9 +51,10 @@ type ComplexityRoot struct {
 	}
 
 	ChainInfo struct {
-		ChainID                 func(childComplexity int) int
-		CosmosMsgs              func(childComplexity int) int
-		LastBlockHeightReceived func(childComplexity int) int
+		ChainID                   func(childComplexity int) int
+		CosmosMsgs                func(childComplexity int) int
+		LastBlockHeightReceived   func(childComplexity int) int
+		LastBlockTimeUnixReceived func(childComplexity int) int
 	}
 
 	CosmosMsgIndexed struct {
@@ -62,10 +63,11 @@ type ComplexityRoot struct {
 	}
 
 	IndexedTx struct {
-		BlockHeight  func(childComplexity int) int
-		MsgLiquidate func(childComplexity int) int
-		ProtoMsgName func(childComplexity int) int
-		TxHash       func(childComplexity int) int
+		BlockHeight   func(childComplexity int) int
+		BlockTimeUnix func(childComplexity int) int
+		MsgLiquidate  func(childComplexity int) int
+		ProtoMsgName  func(childComplexity int) int
+		TxHash        func(childComplexity int) int
 	}
 
 	MsgLiquidate struct {
@@ -133,6 +135,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChainInfo.LastBlockHeightReceived(childComplexity), true
 
+	case "ChainInfo.lastBlockTimeUnixReceived":
+		if e.complexity.ChainInfo.LastBlockTimeUnixReceived == nil {
+			break
+		}
+
+		return e.complexity.ChainInfo.LastBlockTimeUnixReceived(childComplexity), true
+
 	case "CosmosMsgIndexed.blocksIndexed":
 		if e.complexity.CosmosMsgIndexed.BlocksIndexed == nil {
 			break
@@ -153,6 +162,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.IndexedTx.BlockHeight(childComplexity), true
+
+	case "IndexedTx.blockTimeUnix":
+		if e.complexity.IndexedTx.BlockTimeUnix == nil {
+			break
+		}
+
+		return e.complexity.IndexedTx.BlockTimeUnix(childComplexity), true
 
 	case "IndexedTx.msgLiquidate":
 		if e.complexity.IndexedTx.MsgLiquidate == nil {
@@ -496,6 +512,50 @@ func (ec *executionContext) fieldContext_ChainInfo_lastBlockHeightReceived(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _ChainInfo_lastBlockTimeUnixReceived(ctx context.Context, field graphql.CollectedField, obj *types.ChainInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChainInfo_lastBlockTimeUnixReceived(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastBlockTimeUnixReceived, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChainInfo_lastBlockTimeUnixReceived(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChainInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChainInfo_chainID(ctx context.Context, field graphql.CollectedField, obj *types.ChainInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChainInfo_chainID(ctx, field)
 	if err != nil {
@@ -804,6 +864,50 @@ func (ec *executionContext) _IndexedTx_blockHeight(ctx context.Context, field gr
 }
 
 func (ec *executionContext) fieldContext_IndexedTx_blockHeight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IndexedTx",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IndexedTx_blockTimeUnix(ctx context.Context, field graphql.CollectedField, obj *types.IndexedTx) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_IndexedTx_blockTimeUnix(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BlockTimeUnix, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_IndexedTx_blockTimeUnix(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "IndexedTx",
 		Field:      field,
@@ -3013,6 +3117,11 @@ func (ec *executionContext) _ChainInfo(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "lastBlockTimeUnixReceived":
+			out.Values[i] = ec._ChainInfo_lastBlockTimeUnixReceived(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "chainID":
 			out.Values[i] = ec._ChainInfo_chainID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3113,6 +3222,11 @@ func (ec *executionContext) _IndexedTx(ctx context.Context, sel ast.SelectionSet
 			}
 		case "blockHeight":
 			out.Values[i] = ec._IndexedTx_blockHeight(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "blockTimeUnix":
+			out.Values[i] = ec._IndexedTx_blockTimeUnix(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

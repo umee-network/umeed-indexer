@@ -8,9 +8,10 @@ type BlockIndexedInterval struct {
 }
 
 type ChainInfo struct {
-	LastBlockHeightReceived int                 `json:"lastBlockHeightReceived" firestore:"lastBlockHeightReceived"`
-	ChainID                 string              `json:"chainID" firestore:"chainID"`
-	CosmosMsgs              []*CosmosMsgIndexed `json:"cosmosMsgs" firestore:"cosmosMsgs"`
+	LastBlockHeightReceived   int                 `json:"lastBlockHeightReceived" firestore:"lastBlockHeightReceived"`
+	LastBlockTimeUnixReceived int                 `json:"lastBlockTimeUnixReceived" firestore:"lastBlockTimeUnixReceived"`
+	ChainID                   string              `json:"chainID" firestore:"chainID"`
+	CosmosMsgs                []*CosmosMsgIndexed `json:"cosmosMsgs" firestore:"cosmosMsgs"`
 }
 
 type CosmosMsgIndexed struct {
@@ -19,10 +20,11 @@ type CosmosMsgIndexed struct {
 }
 
 type IndexedTx struct {
-	TxHash       string        `json:"txHash" firestore:"txHash"`
-	ProtoMsgName string        `json:"protoMsgName" firestore:"protoMsgName"`
-	BlockHeight  int           `json:"blockHeight" firestore:"blockHeight"`
-	MsgLiquidate *MsgLiquidate `json:"msgLiquidate,omitempty" firestore:"msgLiquidate"`
+	TxHash        string        `json:"txHash" firestore:"txHash"`
+	ProtoMsgName  string        `json:"protoMsgName" firestore:"protoMsgName"`
+	BlockHeight   int           `json:"blockHeight" firestore:"blockHeight"`
+	BlockTimeUnix int           `json:"blockTimeUnix" firestore:"blockTimeUnix"`
+	MsgLiquidate  *MsgLiquidate `json:"msgLiquidate,omitempty" firestore:"msgLiquidate"`
 }
 
 type MsgLiquidate struct {

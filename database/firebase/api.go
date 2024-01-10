@@ -32,15 +32,16 @@ func (db *Database) GetChainInfo(ctx context.Context, chainID string) (info *typ
 	return info, err
 }
 
-func (db *Database) StoreMsgLiquidate(ctx context.Context, chainID string, txHash []byte, blockHeight int, msg types.MsgLiquidate) (err error) {
+func (db *Database) StoreMsgLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash []byte, msg types.MsgLiquidate) (err error) {
 	err = db.RunTransaction(
 		ctx, func(ctx context.Context, t *firestore.Transaction) error {
 			tctx := txctx.New(ctx, time.Now(), t, db.Fs)
-			return addTx(tctx, chainID, types.IndexedTx{
-				TxHash:       string(txHash),
-				ProtoMsgName: types.MsgNameLiquidate,
-				BlockHeight:  blockHeight,
-				MsgLiquidate: &msg,
+			return addTx(tctx, chainInfo.ChainID, types.IndexedTx{
+				TxHash:        string(txHash),
+				ProtoMsgName:  types.MsgNameLiquidate,
+				BlockHeight:   blockHeight,
+				BlockTimeUnix: blockTimeUnix,
+				MsgLiquidate:  &msg,
 			})
 		},
 	)

@@ -8,6 +8,7 @@ directive @goTag(
 
 type ChainInfo {
     lastBlockHeightReceived: Int! @goTag(key: "firestore", value: "lastBlockHeightReceived")
+    lastBlockTimeUnixReceived: Int! @goTag(key: "firestore", value: "lastBlockTimeUnixReceived")
     chainID: String! @goTag(key: "firestore", value: "chainID")
     cosmosMsgs: [CosmosMsgIndexed!]! @goTag(key: "firestore", value: "cosmosMsgs")
 }
@@ -27,6 +28,7 @@ type IndexedTx {
     txHash: String! @goTag(key: "firestore", value: "txHash")
     protoMsgName: String! @goTag(key: "firestore", value: "protoMsgName")
     blockHeight: Int! @goTag(key: "firestore", value: "blockHeight")
+    blockTimeUnix: Int! @goTag(key: "firestore", value: "blockTimeUnix")
     msgLiquidate: MsgLiquidate @goTag(key: "firestore", value: "msgLiquidate")
 }
 

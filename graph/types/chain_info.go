@@ -24,9 +24,10 @@ type BlockIndexedIntervalSorter []*BlockIndexedInterval
 // DefaultChainInfo returns the default chain info.
 func DefaultChainInfo(chainID string) *ChainInfo {
 	return &ChainInfo{
-		ChainID:                 chainID,
-		CosmosMsgs:              defaultCosmosMsgs,
-		LastBlockHeightReceived: 0,
+		ChainID:                   chainID,
+		CosmosMsgs:                defaultCosmosMsgs,
+		LastBlockHeightReceived:   0,
+		LastBlockTimeUnixReceived: 0,
 	}
 }
 

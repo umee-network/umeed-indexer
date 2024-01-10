@@ -27,22 +27,22 @@ type Database interface {
 	*/
 
 	// Close closes the needed connections.
-	Close() error
+	Close() (err error)
 	// DeleteAll inside the database.
-	DeleteAll(ctx context.Context) error
+	DeleteAll(ctx context.Context) (err error)
 
 	/*
 		Chain Data
 	*/
 
 	// DeleteChainData delete the chain data and all of its structures inside.
-	DeleteChainData(ctx context.Context, chainID string) error
+	DeleteChainData(ctx context.Context, chainID string) (err error)
 	// UpsertChainInfo updates or inserts a chain info structure.
-	UpsertChainInfo(ctx context.Context, info types.ChainInfo) (err error)
+	UpsertChainInfo(ctx context.Context, chainInfo types.ChainInfo) (err error)
 	// GetChainInfo returns the last chainInfo.
 	GetChainInfo(ctx context.Context, chainID string) (info *types.ChainInfo, err error)
 	// StoreMsgLiquidate stores a new msgliquidate updating the CosmosMsgIndexed.
-	StoreMsgLiquidate(ctx context.Context, chainID string, txHash []byte, blockHeight int, msg types.MsgLiquidate) error
+	StoreMsgLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash []byte, msg types.MsgLiquidate) (err error)
 }
 
 // NewDB returns a new database instance based on the specified type.
