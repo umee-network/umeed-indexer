@@ -36,13 +36,18 @@ func (db *Database) StoreMsgLiquidate(ctx context.Context, chainInfo types.Chain
 	err = db.RunTransaction(
 		ctx, func(ctx context.Context, t *firestore.Transaction) error {
 			tctx := txctx.New(ctx, time.Now(), t, db.Fs)
-			return addTx(tctx, chainInfo.ChainID, types.IndexedTx{
+			err = addTx(tctx, chainInfo.ChainID, types.IndexedTx{
 				TxHash:        string(txHash),
 				ProtoMsgName:  types.MsgNameLiquidate,
 				BlockHeight:   blockHeight,
 				BlockTimeUnix: blockTimeUnix,
 				MsgLiquidate:  &msg,
 			})
+			if err != nil {
+				return err
+			}
+
+			return upsertChainInfo(tctx, chainInfo)
 		},
 	)
 	return err
