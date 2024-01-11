@@ -3,6 +3,7 @@ package idx
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -20,10 +21,13 @@ const (
 // Indexer struct responsible for calling blockchain rpc/websocket for data and
 // storing that into the database.
 type Indexer struct {
-	b         Blockchain
-	db        database.Database
-	logger    zerolog.Logger
-	chainInfo *types.ChainInfo
+	b      Blockchain
+	db     database.Database
+	logger zerolog.Logger
+
+	chainInfo   *types.ChainInfo
+	muChainInfo sync.Mutex
+
 	// defines the lest block that the node has available in his store,
 	// usually nodes do not keep all the blocks forever.
 	lowestBlockHeightAvailableOnNode int
@@ -78,15 +82,16 @@ func (i *Indexer) IndexCases(
 
 // IndexOldBlocks checks if it is needed to index old blocks and index them as needed.
 func (i *Indexer) IndexOldBlocks(ctx context.Context) {
-	if len(i.chainInfo.CosmosMsgs) == 0 { // safe check that we need to have some cosmos msg.
+	cosmosMsgs, lastBlockHeightReceived := i.chainInfoCopy()
+	if len(cosmosMsgs) == 0 { // safe check that we need to have some cosmos msg.
 		return
 	}
 
-	lowestBlock := i.chainInfo.LowestBlockHeightToIndex(i.lowestBlockHeightAvailableOnNode)
+	lowestBlock := types.LowestBlockHeightToIndex(cosmosMsgs, i.lowestBlockHeightAvailableOnNode)
 	heighestBlock := lowestBlock + IDX_BLOCKS_PER_MINUTE
 	// if the lowest block needed to index is not {IDX_BLOCKS_PER_MINUTE} behind the current
 	// block, no need to try to index, wait until it is old enough.
-	if heighestBlock > i.chainInfo.LastBlockHeightReceived {
+	if heighestBlock > lastBlockHeightReceived {
 		i.logger.Info().Int("fromBlock", lowestBlock).Int("ToBlock", heighestBlock).Msg("no need to index old blocks")
 		return
 	}
@@ -109,12 +114,13 @@ func (i *Indexer) IndexOldBlocks(ctx context.Context) {
 	if err := i.HandleBlock(ctx, blk); err != nil {
 		i.logger.Err(err).Int("blockHeight", blockHeight).Msg("error handling old block")
 	}
-	i.IndexBlocksFromTo(ctx, lowestBlock+1, heighestBlock)
+	i.IndexBlocksFromTo(ctx, lowestBlock+1, heighestBlock, cosmosMsgs)
 }
 
-func (i *Indexer) IndexBlocksFromTo(ctx context.Context, from, to int) {
+// IndexBlocksFromTo index blocks from specific heights.
+func (i *Indexer) IndexBlocksFromTo(ctx context.Context, from, to int, cosmosMsgs []*types.CosmosMsgIndexed) {
 	for blockHeight := from; blockHeight < to; blockHeight++ {
-		if !i.chainInfo.NeedsToIndex(blockHeight) {
+		if !types.NeedsToIndex(cosmosMsgs, blockHeight) {
 			continue
 		}
 		i.logger.Debug().Int("blockHeight", blockHeight).Msg("indexing old block")
@@ -133,6 +139,8 @@ func (i *Indexer) IndexBlocksFromTo(ctx context.Context, from, to int) {
 
 // UpsertChainInfo updates the chain info.
 func (i *Indexer) UpsertChainInfo(ctx context.Context) error {
+	i.muChainInfo.Lock()
+	defer i.muChainInfo.Unlock()
 	return i.db.UpsertChainInfo(ctx, *i.chainInfo)
 }
 
@@ -160,8 +168,14 @@ func (i *Indexer) loadChainHeader(ctx context.Context) error {
 		return err
 	}
 	info.LastBlockHeightReceived = int(height)
+	i.setChainInfo(info)
+	return i.UpsertChainInfo(ctx)
+}
+
+func (i *Indexer) setChainInfo(info *types.ChainInfo) {
+	i.muChainInfo.Lock()
+	defer i.muChainInfo.Unlock()
 	i.chainInfo = info
-	return i.db.UpsertChainInfo(ctx, *info)
 }
 
 // Close closes all the open connections.
@@ -176,4 +190,34 @@ func (i *Indexer) Close(ctx context.Context) error {
 	})
 
 	return g.Wait()
+}
+
+// chainInfoCopy returns a copy of cosmos msgs indexed.
+func (i *Indexer) chainInfoCopy() (cosmosMsgs []*types.CosmosMsgIndexed, lastBlockHeightReceived int) {
+	i.muChainInfo.Lock()
+	defer i.muChainInfo.Unlock()
+
+	cosmosMsgs = make([]*types.CosmosMsgIndexed, len(i.chainInfo.CosmosMsgs))
+	copy(cosmosMsgs, i.chainInfo.CosmosMsgs)
+
+	return cosmosMsgs, i.chainInfo.LastBlockHeightReceived
+}
+
+func (i *Indexer) chainInfoUpdateFromBlock(blk *tmtypes.Block) {
+	i.muChainInfo.Lock()
+	defer i.muChainInfo.Unlock()
+
+	i.chainInfo.LastBlockHeightReceived = int(blk.Height)
+	i.chainInfo.LastBlockTimeUnixReceived = int(blk.Time.Unix())
+	i.chainInfo.ChainID = blk.ChainID
+
+	// i.safeChainInfo(func(info *types.ChainInfo) {
+
+	// })
+}
+
+func (i *Indexer) safeChainInfo(f func(info *types.ChainInfo)) {
+	i.muChainInfo.Lock()
+	defer i.muChainInfo.Unlock()
+	f(i.chainInfo)
 }

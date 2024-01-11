@@ -63,7 +63,12 @@ func (c *ChainInfo) MergeWithDefaults() {
 
 // NeedsToIndex returns true if the given block height needs to be indexed.
 func (c *ChainInfo) NeedsToIndex(blockHeight int) bool {
-	for _, cosmosMsg := range c.CosmosMsgs {
+	return NeedsToIndex(c.CosmosMsgs, blockHeight)
+}
+
+// NeedsToIndex returns true if the given block height needs to be indexed.
+func NeedsToIndex(cosmosMsgs []*CosmosMsgIndexed, blockHeight int) bool {
+	for _, cosmosMsg := range cosmosMsgs {
 		if BlockAlreadyIndexed(blockHeight, cosmosMsg.BlocksIndexed) {
 			continue
 		}
@@ -89,8 +94,8 @@ func (c *ChainInfo) LowestBlockHeightToIndex(minHeight int) (blockHeight int) {
 	return LowestBlockHeightToIndex(c.CosmosMsgs, minHeight)
 }
 
-// BlockHeightIndexed updates the internal values of cosmos msgs of the current block indexed.
-func (c *ChainInfo) BlockHeightIndexed(blkHeight int) {
+// IndexBlockHeight updates the internal values of cosmos msgs of the current block indexed.
+func (c *ChainInfo) IndexBlockHeight(blkHeight int) {
 
 	for _, cosmosMsg := range c.CosmosMsgs {
 		if BlockAlreadyIndexed(blkHeight, cosmosMsg.BlocksIndexed) {
@@ -111,9 +116,9 @@ func (c *ChainInfo) BlockHeightIndexed(blkHeight int) {
 	}
 }
 
-// BlockHeightIndexedForMsg updates the internal values of cosmos msgs of the current block indexed.
-func (c *ChainInfo) BlockHeightIndexedForMsg(msgName string, blkHeight int) {
-
+// IndexBlockHeightForMsg updates the internal values of cosmos msgs of the current block indexed.
+func (c *ChainInfo) IndexBlockHeightForMsg(msgName string, blkHeight int) {
+	// TODO: add tests.
 	for _, cosmosMsg := range c.CosmosMsgs {
 		if !strings.EqualFold(msgName, cosmosMsg.ProtoMsgName) {
 			continue
@@ -121,14 +126,6 @@ func (c *ChainInfo) BlockHeightIndexedForMsg(msgName string, blkHeight int) {
 		if BlockAlreadyIndexed(blkHeight, cosmosMsg.BlocksIndexed) {
 			continue
 		}
-
-		// from: 5 to: 10
-		// from: 14 to 19
-		// blk: 13
-
-		// from: 5 to: 10
-		// from: 14 to 19
-		// blk: 11
 
 		sort.Sort(BlockIndexedIntervalSorter(cosmosMsg.BlocksIndexed))
 		// needs to be sorted.
