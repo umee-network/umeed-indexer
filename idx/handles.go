@@ -15,7 +15,7 @@ func (i *Indexer) HandleNewBlock(ctx context.Context, blk *tmtypes.Block) error 
 	i.logger.Info().Int64("height", blk.Height).Msg("new block received")
 
 	// since it is a new block, updates the chain info base information
-	i.chainInfoUpdateFromBlock(blk)
+	i.chainInfo.UpdateFromBlock(blk)
 
 	// and continues to handle a block normally.
 	return i.HandleBlock(ctx, blk)
@@ -29,7 +29,7 @@ func (i *Indexer) HandleBlock(ctx context.Context, blk *tmtypes.Block) error {
 		}
 	}
 
-	i.indexBlockChainInfo(int(blk.Height))
+	i.chainInfo.IndexBlock(int(blk.Height))
 	return i.UpsertChainInfo(ctx)
 }
 
@@ -56,7 +56,7 @@ func (i *Indexer) HandleTx(ctx context.Context, blockHeight, blockTimeUnix int, 
 // HandleMsg handles the receive of new msg from the chain Tx.
 func (i *Indexer) HandleMsg(ctx context.Context, blkHeight, blockTimeUnix int, txHash []byte, msg proto.Message) error {
 	msgName := proto.MessageName(msg)
-	i.indexBlockHeightForMsgChainInfo(msgName, blkHeight)
+	i.chainInfo.IndexBlockForMsg(msgName, blkHeight)
 
 	switch msgName {
 	case types.MsgNameLiquidate:
@@ -68,21 +68,11 @@ func (i *Indexer) HandleMsg(ctx context.Context, blkHeight, blockTimeUnix int, t
 		}
 
 		i.logger.Debug().Msg("storing msg liquidate")
-		return i.db.StoreMsgLiquidate(ctx, *i.chainInfo, blkHeight, blockTimeUnix, txHash, types.ParseTxLeverageLiquidate(msgLiq))
+		return i.chainInfo.Execute(func(info *types.ChainInfo) error {
+			return i.db.StoreMsgLiquidate(ctx, *info, blkHeight, blockTimeUnix, txHash, types.ParseTxLeverageLiquidate(msgLiq))
+		})
 	default:
 		// i.logger.Debug().Str("messageName", msgName).Msg("no handle for msg")
 	}
 	return nil
-}
-
-func (i *Indexer) indexBlockChainInfo(blkHeight int) {
-	i.muChainInfo.Lock()
-	defer i.muChainInfo.Unlock()
-	i.chainInfo.IndexBlockHeight(int(blkHeight))
-}
-
-func (i *Indexer) indexBlockHeightForMsgChainInfo(msgName string, blkHeight int) {
-	i.muChainInfo.Lock()
-	defer i.muChainInfo.Unlock()
-	i.chainInfo.IndexBlockHeightForMsg(msgName, blkHeight)
 }

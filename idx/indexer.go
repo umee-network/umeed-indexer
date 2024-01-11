@@ -2,8 +2,6 @@ package idx
 
 import (
 	"context"
-	"fmt"
-	"sync"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -25,8 +23,7 @@ type Indexer struct {
 	db     database.Database
 	logger zerolog.Logger
 
-	chainInfo   *types.ChainInfo
-	muChainInfo sync.Mutex
+	chainInfo SafeChainInfo
 
 	// defines the lest block that the node has available in his store,
 	// usually nodes do not keep all the blocks forever.
@@ -75,14 +72,14 @@ func (i *Indexer) IndexCases(
 
 		case <-oneMin.C: // every minute. Tries to index from old blocks, if needed.
 			i.logger.Info().Msgf("One minute passed")
-			i.IndexOldBlocks(ctx)
+			go i.IndexOldBlocks(ctx)
 		}
 	}
 }
 
 // IndexOldBlocks checks if it is needed to index old blocks and index them as needed.
 func (i *Indexer) IndexOldBlocks(ctx context.Context) {
-	cosmosMsgs, lastBlockHeightReceived := i.chainInfoCopy()
+	cosmosMsgs, lastBlockHeightReceived := i.chainInfo.Copy()
 	if len(cosmosMsgs) == 0 { // safe check that we need to have some cosmos msg.
 		return
 	}
@@ -139,19 +136,14 @@ func (i *Indexer) IndexBlocksFromTo(ctx context.Context, from, to int, cosmosMsg
 
 // UpsertChainInfo updates the chain info.
 func (i *Indexer) UpsertChainInfo(ctx context.Context) error {
-	i.muChainInfo.Lock()
-	defer i.muChainInfo.Unlock()
-	return i.db.UpsertChainInfo(ctx, *i.chainInfo)
+	return i.chainInfo.Execute(func(info *types.ChainInfo) error {
+		return i.db.UpsertChainInfo(ctx, *info)
+	})
 }
 
 // onStart loads the starter data into blockchain.
 func (i *Indexer) onStart(ctx context.Context) error {
-	if err := i.loadChainHeader(ctx); err != nil {
-		return err
-	}
-
-	// from which old block should index.
-	return nil
+	return i.loadChainHeader(ctx)
 }
 
 // loadChainHeader queries the chain by the last block height and sets the chain ID inside
@@ -159,7 +151,7 @@ func (i *Indexer) onStart(ctx context.Context) error {
 func (i *Indexer) loadChainHeader(ctx context.Context) error {
 	chainID, height, err := i.b.ChainHeader()
 	if err != nil {
-		fmt.Printf("\nerr on loadChainHeader %s", err.Error())
+		i.logger.Err(err).Msg("error loading chain header")
 		return err
 	}
 	info, err := i.db.GetChainInfo(ctx, chainID)
@@ -168,14 +160,8 @@ func (i *Indexer) loadChainHeader(ctx context.Context) error {
 		return err
 	}
 	info.LastBlockHeightReceived = int(height)
-	i.setChainInfo(info)
+	i.chainInfo = *NewSafeChainInfo(info)
 	return i.UpsertChainInfo(ctx)
-}
-
-func (i *Indexer) setChainInfo(info *types.ChainInfo) {
-	i.muChainInfo.Lock()
-	defer i.muChainInfo.Unlock()
-	i.chainInfo = info
 }
 
 // Close closes all the open connections.
@@ -190,34 +176,4 @@ func (i *Indexer) Close(ctx context.Context) error {
 	})
 
 	return g.Wait()
-}
-
-// chainInfoCopy returns a copy of cosmos msgs indexed.
-func (i *Indexer) chainInfoCopy() (cosmosMsgs []*types.CosmosMsgIndexed, lastBlockHeightReceived int) {
-	i.muChainInfo.Lock()
-	defer i.muChainInfo.Unlock()
-
-	cosmosMsgs = make([]*types.CosmosMsgIndexed, len(i.chainInfo.CosmosMsgs))
-	copy(cosmosMsgs, i.chainInfo.CosmosMsgs)
-
-	return cosmosMsgs, i.chainInfo.LastBlockHeightReceived
-}
-
-func (i *Indexer) chainInfoUpdateFromBlock(blk *tmtypes.Block) {
-	i.muChainInfo.Lock()
-	defer i.muChainInfo.Unlock()
-
-	i.chainInfo.LastBlockHeightReceived = int(blk.Height)
-	i.chainInfo.LastBlockTimeUnixReceived = int(blk.Time.Unix())
-	i.chainInfo.ChainID = blk.ChainID
-
-	// i.safeChainInfo(func(info *types.ChainInfo) {
-
-	// })
-}
-
-func (i *Indexer) safeChainInfo(f func(info *types.ChainInfo)) {
-	i.muChainInfo.Lock()
-	defer i.muChainInfo.Unlock()
-	f(i.chainInfo)
 }
