@@ -31,12 +31,12 @@ type Indexer struct {
 }
 
 // NewIndexer returns a new indexer struct with open connections.
-func NewIndexer(ctx context.Context, b Blockchain, db database.Database, logger zerolog.Logger) (*Indexer, error) {
+func NewIndexer(ctx context.Context, b Blockchain, db database.Database, logger zerolog.Logger, startFromBlockHeight int) (*Indexer, error) {
 	i := &Indexer{
 		b:                                b,
 		db:                               db,
 		logger:                           logger.With().Str("package", "idx").Logger(),
-		lowestBlockHeightAvailableOnNode: 1,
+		lowestBlockHeightAvailableOnNode: startFromBlockHeight,
 	}
 	return i, i.onStart(ctx)
 }

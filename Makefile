@@ -18,3 +18,8 @@ generate:
 ## Database
 run-firestore:
 	./scripts/firestore-emulator-run.sh
+
+clean:
+	rm -rf $(OUT_BUILD_PATH)/$(BIN_NAME) $(MAIN_FILE)
+
+.PHONY: build clean

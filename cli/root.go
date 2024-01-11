@@ -14,8 +14,9 @@ import (
 
 // TODO: check to remove env and receive as flags with default value...
 const (
-	EnvChainRPC  = "CHAIN_RPC"
-	EnvChainGRPC = "CHAIN_GRPC"
+	EnvChainRPC            = "CHAIN_RPC"
+	EnvChainGRPC           = "CHAIN_GRPC"
+	FlagMinimumBlockHeight = "block"
 )
 
 var (
@@ -44,7 +45,7 @@ func CmdStartIndex() *cobra.Command {
 		Use:   "start",
 		Short: "Runs the indexer, querying and listening to the chain and storing it on the database.",
 		Args:  cobra.NoArgs,
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			b, err := chain.NewBlockchain(os.Getenv(EnvChainRPC), os.Getenv(EnvChainGRPC))
 			if err != nil {
 				return err
@@ -62,7 +63,12 @@ func CmdStartIndex() *cobra.Command {
 				return err
 			}
 
-			i, err := idx.NewIndexer(ctx, b, db, logger)
+			minimumBlockHeight, err := cmd.Flags().GetInt(FlagMinimumBlockHeight)
+			if err != nil {
+				return err
+			}
+
+			i, err := idx.NewIndexer(ctx, b, db, logger, minimumBlockHeight)
 			if err != nil {
 				return err
 			}
@@ -71,6 +77,7 @@ func CmdStartIndex() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().Int(FlagMinimumBlockHeight, 1, fmt.Sprintf("%s=100 to start indexing from block 100", FlagMinimumBlockHeight))
 	return cmd
 }
 
