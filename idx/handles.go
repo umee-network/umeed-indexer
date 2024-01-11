@@ -58,9 +58,11 @@ func (i *Indexer) HandleTx(ctx context.Context, blockHeight, blockTimeUnix int, 
 // HandleMsg handles the receive of new msg from the chain Tx.
 func (i *Indexer) HandleMsg(ctx context.Context, blockHeight, blockTimeUnix int, txHash []byte, msg proto.Message) error {
 	msgName := proto.MessageName(msg)
+	i.chainInfo.BlockHeightIndexedForMsg(msgName, blockHeight)
+
 	switch msgName {
 	case types.MsgNameLiquidate:
-		// TODO: add check if the txs from this block were already indexed, based on chainInfo
+		// TODO: add check if the txs from this block were already indexed, based on chainInfoW
 		msgLiq, ok := msg.(*lvgtypes.MsgLiquidate)
 		if !ok {
 			i.logger.Error().Str("messageName", msgName).Msg("not able to parse into *lvgtypes.MsgLiquidate")
@@ -68,10 +70,9 @@ func (i *Indexer) HandleMsg(ctx context.Context, blockHeight, blockTimeUnix int,
 		}
 
 		i.logger.Debug().Msg("storing msg liquidate")
-		return i.db.StoreMsgLiquidate(ctx, i.chainInfo, blockHeight, blockTimeUnix, txHash, types.ParseTxLeverageLiquidate(msgLiq))
-
+		return i.db.StoreMsgLiquidate(ctx, *i.chainInfo, blockHeight, blockTimeUnix, txHash, types.ParseTxLeverageLiquidate(msgLiq))
 	default:
-		i.logger.Debug().Str("messageName", msgName).Msg("no handle for msg")
+		// i.logger.Debug().Str("messageName", msgName).Msg("no handle for msg")
 	}
 	return nil
 }

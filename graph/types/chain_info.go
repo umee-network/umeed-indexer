@@ -111,6 +111,31 @@ func (c *ChainInfo) BlockHeightIndexed(blkHeight int) {
 	}
 }
 
+// BlockHeightIndexedForMsg updates the internal values of cosmos msgs of the current block indexed.
+func (c *ChainInfo) BlockHeightIndexedForMsg(msgName string, blkHeight int) {
+
+	for _, cosmosMsg := range c.CosmosMsgs {
+		if !strings.EqualFold(msgName, cosmosMsg.ProtoMsgName) {
+			continue
+		}
+		if BlockAlreadyIndexed(blkHeight, cosmosMsg.BlocksIndexed) {
+			continue
+		}
+
+		// from: 5 to: 10
+		// from: 14 to 19
+		// blk: 13
+
+		// from: 5 to: 10
+		// from: 14 to 19
+		// blk: 11
+
+		sort.Sort(BlockIndexedIntervalSorter(cosmosMsg.BlocksIndexed))
+		// needs to be sorted.
+		cosmosMsg.BlocksIndexed = IndexBlockHeightToInterval(cosmosMsg.BlocksIndexed, blkHeight)
+	}
+}
+
 // IndexBlockHeightToInterval removes the index from the slice.
 func IndexBlockHeightToInterval(slice []*BlockIndexedInterval, blkHeightToAdd int) []*BlockIndexedInterval {
 	for i, blkIndexed := range slice {
@@ -183,20 +208,37 @@ func RemoveFromBlockIndexedInterval(slice []*BlockIndexedInterval, idxToRemove i
 
 // LowestBlockHeightToIndex returns the least block height it should start to try to index based on the cosmos msgs already indexed
 func LowestBlockHeightToIndex(cosmosMsgs []*CosmosMsgIndexed, minHeight int) (blockHeight int) {
+	blockHeight = 1    // starts at one
+	if minHeight < 1 { // makes sure the min height is always 1.
+		minHeight = 1
+	}
 	if len(cosmosMsgs) == 0 { // no need to sort / iterate if there is no msgs to index
 		return minHeight
 	}
 
+	blockHeightSetByMsg := false
 	for _, cosmosMsg := range cosmosMsgs {
-		for _, blockIdxed := range cosmosMsg.BlocksIndexed {
+		for i, blockIdxed := range cosmosMsg.BlocksIndexed {
 			nextBlockToIndex := blockIdxed.IdxToBlockHeight + 1
 
+			if i == 0 && blockIdxed.IdxFromBlockHeight > minHeight {
+				// there is a gap in the beggining, like indexer 3 ~ 6 with minHeight as 1
+				// it should set as minHeight.
+				blockHeightSetByMsg = true
+				blockHeight = minHeight
+				continue
+			}
+
 			if nextBlockToIndex < minHeight {
+				// next possible block is lower than the minHeight
 				continue
 			}
-			if nextBlockToIndex < blockHeight {
+			if blockHeightSetByMsg && nextBlockToIndex > blockHeight {
+				// next possible block was already set and it is bigger than the previous set
 				continue
 			}
+
+			blockHeightSetByMsg = true
 			blockHeight = nextBlockToIndex
 		}
 	}

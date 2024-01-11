@@ -23,7 +23,7 @@ type Indexer struct {
 	b         Blockchain
 	db        database.Database
 	logger    zerolog.Logger
-	chainInfo types.ChainInfo
+	chainInfo *types.ChainInfo
 	// defines the lest block that the node has available in his store,
 	// usually nodes do not keep all the blocks forever.
 	lowestBlockHeightAvailableOnNode int
@@ -55,8 +55,8 @@ func (i *Indexer) IndexCases(
 	ctx context.Context,
 	cNewBlock <-chan *tmtypes.Block,
 ) error {
-	tenSec := time.NewTicker(time.Second * 10)
-	defer tenSec.Stop()
+	oneMin := time.NewTicker(time.Second * 60)
+	defer oneMin.Stop()
 
 	for {
 		select {
@@ -69,8 +69,8 @@ func (i *Indexer) IndexCases(
 				i.logger.Err(err).Msg("error handling block")
 			}
 
-		case <-tenSec.C: // every minute. Tries to index from old blocks, if needed.
-			i.logger.Info().Msg("One minute passed")
+		case <-oneMin.C: // every minute. Tries to index from old blocks, if needed.
+			i.logger.Info().Msgf("One minute passed")
 			i.IndexOldBlocks(ctx)
 		}
 	}
@@ -133,7 +133,7 @@ func (i *Indexer) IndexBlocksFromTo(ctx context.Context, from, to int) {
 
 // UpsertChainInfo updates the chain info.
 func (i *Indexer) UpsertChainInfo(ctx context.Context) error {
-	return i.db.UpsertChainInfo(ctx, i.chainInfo)
+	return i.db.UpsertChainInfo(ctx, *i.chainInfo)
 }
 
 // onStart loads the starter data into blockchain.
@@ -160,7 +160,7 @@ func (i *Indexer) loadChainHeader(ctx context.Context) error {
 		return err
 	}
 	info.LastBlockHeightReceived = int(height)
-	i.chainInfo = *info
+	i.chainInfo = info
 	return i.db.UpsertChainInfo(ctx, *info)
 }
 
