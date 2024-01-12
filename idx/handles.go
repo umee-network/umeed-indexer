@@ -60,7 +60,6 @@ func (i *Indexer) HandleMsg(ctx context.Context, blkHeight, blockTimeUnix int, t
 
 	switch msgName {
 	case types.MsgNameLiquidate:
-		// TODO: add check if the txs from this block were already indexed, based on chainInfoW
 		msgLiq, ok := msg.(*lvgtypes.MsgLiquidate)
 		if !ok {
 			i.logger.Error().Str("messageName", msgName).Msg("not able to parse into *lvgtypes.MsgLiquidate")
@@ -69,7 +68,28 @@ func (i *Indexer) HandleMsg(ctx context.Context, blkHeight, blockTimeUnix int, t
 
 		i.logger.Debug().Msg("storing msg liquidate")
 		return i.chainInfo.Execute(func(info *types.ChainInfo) error {
-			return i.db.StoreMsgLiquidate(ctx, *info, blkHeight, blockTimeUnix, txHash, types.ParseTxLeverageLiquidate(msgLiq))
+			if !info.NeedsToIndex(blkHeight) {
+				i.logger.Debug().Msg("no need to store msg liquidate for this block height")
+				return nil
+			}
+
+			return i.db.StoreMsgLiquidate(ctx, *info, blkHeight, blockTimeUnix, txHash, types.ParseTxLiquidate(msgLiq))
+		})
+	case types.MsgNameLeveragedLiquidate:
+		msgLevLiq, ok := msg.(*lvgtypes.MsgLeveragedLiquidate)
+		if !ok {
+			i.logger.Error().Str("messageName", msgName).Msg("not able to parse into *lvgtypes.MsgLeveragedLiquidate")
+			return nil
+		}
+
+		i.logger.Debug().Msg("storing msg leverage liquidate")
+		return i.chainInfo.Execute(func(info *types.ChainInfo) error {
+			if !info.NeedsToIndex(blkHeight) {
+				i.logger.Debug().Msg("no need to store msg leverage liquidate for this block height")
+				return nil
+			}
+
+			return i.db.StoreMsgLeverageLiquidate(ctx, *info, blkHeight, blockTimeUnix, txHash, types.ParseTxLeverageLiquidate(msgLevLiq))
 		})
 	default:
 		// i.logger.Debug().Str("messageName", msgName).Msg("no handle for msg")

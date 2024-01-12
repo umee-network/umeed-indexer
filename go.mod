@@ -12,6 +12,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.8.0
+	github.com/stretchr/testify v1.8.4
 	github.com/umee-network/umee/v6 v6.3.0
 	github.com/vektah/gqlparser/v2 v2.5.10
 	golang.org/x/sync v0.6.0
@@ -160,7 +161,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.16.0 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect

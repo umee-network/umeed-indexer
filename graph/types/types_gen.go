@@ -20,11 +20,20 @@ type CosmosMsgIndexed struct {
 }
 
 type IndexedTx struct {
-	TxHash        string        `json:"txHash" firestore:"txHash"`
-	ProtoMsgName  string        `json:"protoMsgName" firestore:"protoMsgName"`
-	BlockHeight   int           `json:"blockHeight" firestore:"blockHeight"`
-	BlockTimeUnix int           `json:"blockTimeUnix" firestore:"blockTimeUnix"`
-	MsgLiquidate  *MsgLiquidate `json:"msgLiquidate,omitempty" firestore:"msgLiquidate"`
+	TxHash               string                `json:"txHash" firestore:"txHash"`
+	ProtoMsgName         string                `json:"protoMsgName" firestore:"protoMsgName"`
+	BlockHeight          int                   `json:"blockHeight" firestore:"blockHeight"`
+	BlockTimeUnix        int                   `json:"blockTimeUnix" firestore:"blockTimeUnix"`
+	MsgLiquidate         *MsgLiquidate         `json:"msgLiquidate,omitempty" firestore:"msgLiquidate"`
+	MsgLeverageLiquidate *MsgLeverageLiquidate `json:"msgLeverageLiquidate,omitempty" firestore:"msgLeverageLiquidate"`
+}
+
+type MsgLeverageLiquidate struct {
+	Liquidator  string `json:"liquidator" firestore:"liquidator"`
+	Borrower    string `json:"borrower" firestore:"borrower"`
+	RepayDenom  string `json:"repayDenom" firestore:"repayDenom"`
+	RewardDenom string `json:"rewardDenom" firestore:"rewardDenom"`
+	MaxRepay    string `json:"maxRepay" firestore:"maxRepay"`
 }
 
 type MsgLiquidate struct {

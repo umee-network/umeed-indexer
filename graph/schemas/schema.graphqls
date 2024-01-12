@@ -30,6 +30,7 @@ type IndexedTx {
     blockHeight: Int! @goTag(key: "firestore", value: "blockHeight")
     blockTimeUnix: Int! @goTag(key: "firestore", value: "blockTimeUnix")
     msgLiquidate: MsgLiquidate @goTag(key: "firestore", value: "msgLiquidate")
+    msgLeverageLiquidate: MsgLeverageLiquidate @goTag(key: "firestore", value: "msgLeverageLiquidate")
 }
 
 type MsgLiquidate {
@@ -37,4 +38,12 @@ type MsgLiquidate {
     borrower: String! @goTag(key: "firestore", value: "borrower")
     repayment: String! @goTag(key: "firestore", value: "repayment")
     rewardDenom: String! @goTag(key: "firestore", value: "rewardDenom")
+}
+
+type MsgLeverageLiquidate {
+    liquidator: String! @goTag(key: "firestore", value: "liquidator")
+    borrower: String! @goTag(key: "firestore", value: "borrower")
+    repayDenom: String! @goTag(key: "firestore", value: "repayDenom")
+    rewardDenom: String! @goTag(key: "firestore", value: "rewardDenom")
+    maxRepay: String! @goTag(key: "firestore", value: "maxRepay")
 }

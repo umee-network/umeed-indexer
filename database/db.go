@@ -43,6 +43,8 @@ type Database interface {
 	GetChainInfo(ctx context.Context, chainID string) (info *types.ChainInfo, err error)
 	// StoreMsgLiquidate stores a new msgliquidate updating the CosmosMsgIndexed.
 	StoreMsgLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash []byte, msg types.MsgLiquidate) (err error)
+	// StoreMsgLeverageLiquidate stores a new MsgLeverageLiquidate updating the CosmosMsgIndexed.
+	StoreMsgLeverageLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash []byte, msg types.MsgLeverageLiquidate) (err error)
 }
 
 // NewDB returns a new database instance based on the specified type.

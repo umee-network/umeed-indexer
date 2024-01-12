@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	MsgNameLiquidate                      = proto.MessageName(&lvgtypes.MsgLiquidate{})
-	defaultCosmosMsgs []*CosmosMsgIndexed = []*CosmosMsgIndexed{
+	MsgNameLiquidate                              = proto.MessageName(&lvgtypes.MsgLiquidate{})
+	MsgNameLeveragedLiquidate                     = proto.MessageName(&lvgtypes.MsgLeveragedLiquidate{})
+	defaultCosmosMsgs         []*CosmosMsgIndexed = []*CosmosMsgIndexed{
 		{
 			ProtoMsgName:  MsgNameLiquidate,
 			BlocksIndexed: []*BlockIndexedInterval{},

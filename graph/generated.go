@@ -63,11 +63,20 @@ type ComplexityRoot struct {
 	}
 
 	IndexedTx struct {
-		BlockHeight   func(childComplexity int) int
-		BlockTimeUnix func(childComplexity int) int
-		MsgLiquidate  func(childComplexity int) int
-		ProtoMsgName  func(childComplexity int) int
-		TxHash        func(childComplexity int) int
+		BlockHeight          func(childComplexity int) int
+		BlockTimeUnix        func(childComplexity int) int
+		MsgLeverageLiquidate func(childComplexity int) int
+		MsgLiquidate         func(childComplexity int) int
+		ProtoMsgName         func(childComplexity int) int
+		TxHash               func(childComplexity int) int
+	}
+
+	MsgLeverageLiquidate struct {
+		Borrower    func(childComplexity int) int
+		Liquidator  func(childComplexity int) int
+		MaxRepay    func(childComplexity int) int
+		RepayDenom  func(childComplexity int) int
+		RewardDenom func(childComplexity int) int
 	}
 
 	MsgLiquidate struct {
@@ -170,6 +179,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.IndexedTx.BlockTimeUnix(childComplexity), true
 
+	case "IndexedTx.msgLeverageLiquidate":
+		if e.complexity.IndexedTx.MsgLeverageLiquidate == nil {
+			break
+		}
+
+		return e.complexity.IndexedTx.MsgLeverageLiquidate(childComplexity), true
+
 	case "IndexedTx.msgLiquidate":
 		if e.complexity.IndexedTx.MsgLiquidate == nil {
 			break
@@ -190,6 +206,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.IndexedTx.TxHash(childComplexity), true
+
+	case "MsgLeverageLiquidate.borrower":
+		if e.complexity.MsgLeverageLiquidate.Borrower == nil {
+			break
+		}
+
+		return e.complexity.MsgLeverageLiquidate.Borrower(childComplexity), true
+
+	case "MsgLeverageLiquidate.liquidator":
+		if e.complexity.MsgLeverageLiquidate.Liquidator == nil {
+			break
+		}
+
+		return e.complexity.MsgLeverageLiquidate.Liquidator(childComplexity), true
+
+	case "MsgLeverageLiquidate.maxRepay":
+		if e.complexity.MsgLeverageLiquidate.MaxRepay == nil {
+			break
+		}
+
+		return e.complexity.MsgLeverageLiquidate.MaxRepay(childComplexity), true
+
+	case "MsgLeverageLiquidate.repayDenom":
+		if e.complexity.MsgLeverageLiquidate.RepayDenom == nil {
+			break
+		}
+
+		return e.complexity.MsgLeverageLiquidate.RepayDenom(childComplexity), true
+
+	case "MsgLeverageLiquidate.rewardDenom":
+		if e.complexity.MsgLeverageLiquidate.RewardDenom == nil {
+			break
+		}
+
+		return e.complexity.MsgLeverageLiquidate.RewardDenom(childComplexity), true
 
 	case "MsgLiquidate.borrower":
 		if e.complexity.MsgLiquidate.Borrower == nil {
@@ -966,6 +1017,279 @@ func (ec *executionContext) fieldContext_IndexedTx_msgLiquidate(ctx context.Cont
 				return ec.fieldContext_MsgLiquidate_rewardDenom(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MsgLiquidate", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IndexedTx_msgLeverageLiquidate(ctx context.Context, field graphql.CollectedField, obj *types.IndexedTx) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_IndexedTx_msgLeverageLiquidate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MsgLeverageLiquidate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*types.MsgLeverageLiquidate)
+	fc.Result = res
+	return ec.marshalOMsgLeverageLiquidate2ᚖgithubᚗcomᚋumeeᚑnetworkᚋumeedᚑindexerᚋgraphᚋtypesᚐMsgLeverageLiquidate(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_IndexedTx_msgLeverageLiquidate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IndexedTx",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "liquidator":
+				return ec.fieldContext_MsgLeverageLiquidate_liquidator(ctx, field)
+			case "borrower":
+				return ec.fieldContext_MsgLeverageLiquidate_borrower(ctx, field)
+			case "repayDenom":
+				return ec.fieldContext_MsgLeverageLiquidate_repayDenom(ctx, field)
+			case "rewardDenom":
+				return ec.fieldContext_MsgLeverageLiquidate_rewardDenom(ctx, field)
+			case "maxRepay":
+				return ec.fieldContext_MsgLeverageLiquidate_maxRepay(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MsgLeverageLiquidate", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MsgLeverageLiquidate_liquidator(ctx context.Context, field graphql.CollectedField, obj *types.MsgLeverageLiquidate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MsgLeverageLiquidate_liquidator(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Liquidator, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MsgLeverageLiquidate_liquidator(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MsgLeverageLiquidate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MsgLeverageLiquidate_borrower(ctx context.Context, field graphql.CollectedField, obj *types.MsgLeverageLiquidate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MsgLeverageLiquidate_borrower(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Borrower, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MsgLeverageLiquidate_borrower(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MsgLeverageLiquidate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MsgLeverageLiquidate_repayDenom(ctx context.Context, field graphql.CollectedField, obj *types.MsgLeverageLiquidate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MsgLeverageLiquidate_repayDenom(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RepayDenom, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MsgLeverageLiquidate_repayDenom(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MsgLeverageLiquidate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MsgLeverageLiquidate_rewardDenom(ctx context.Context, field graphql.CollectedField, obj *types.MsgLeverageLiquidate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MsgLeverageLiquidate_rewardDenom(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RewardDenom, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MsgLeverageLiquidate_rewardDenom(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MsgLeverageLiquidate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MsgLeverageLiquidate_maxRepay(ctx context.Context, field graphql.CollectedField, obj *types.MsgLeverageLiquidate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MsgLeverageLiquidate_maxRepay(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MaxRepay, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MsgLeverageLiquidate_maxRepay(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MsgLeverageLiquidate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3232,6 +3556,67 @@ func (ec *executionContext) _IndexedTx(ctx context.Context, sel ast.SelectionSet
 			}
 		case "msgLiquidate":
 			out.Values[i] = ec._IndexedTx_msgLiquidate(ctx, field, obj)
+		case "msgLeverageLiquidate":
+			out.Values[i] = ec._IndexedTx_msgLeverageLiquidate(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var msgLeverageLiquidateImplementors = []string{"MsgLeverageLiquidate"}
+
+func (ec *executionContext) _MsgLeverageLiquidate(ctx context.Context, sel ast.SelectionSet, obj *types.MsgLeverageLiquidate) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, msgLeverageLiquidateImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MsgLeverageLiquidate")
+		case "liquidator":
+			out.Values[i] = ec._MsgLeverageLiquidate_liquidator(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "borrower":
+			out.Values[i] = ec._MsgLeverageLiquidate_borrower(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "repayDenom":
+			out.Values[i] = ec._MsgLeverageLiquidate_repayDenom(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rewardDenom":
+			out.Values[i] = ec._MsgLeverageLiquidate_rewardDenom(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "maxRepay":
+			out.Values[i] = ec._MsgLeverageLiquidate_maxRepay(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4115,6 +4500,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOMsgLeverageLiquidate2ᚖgithubᚗcomᚋumeeᚑnetworkᚋumeedᚑindexerᚋgraphᚋtypesᚐMsgLeverageLiquidate(ctx context.Context, sel ast.SelectionSet, v *types.MsgLeverageLiquidate) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MsgLeverageLiquidate(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOMsgLiquidate2ᚖgithubᚗcomᚋumeeᚑnetworkᚋumeedᚑindexerᚋgraphᚋtypesᚐMsgLiquidate(ctx context.Context, sel ast.SelectionSet, v *types.MsgLiquidate) graphql.Marshaler {
