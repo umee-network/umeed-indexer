@@ -211,7 +211,7 @@ func IndexBlockHeightToInterval(slice []*BlockIndexedInterval, heightToAdd int) 
 
 			prevIndex := i - 1
 			prev := slice[prevIndex]
-			if prev.IdxToBlockHeight == heightToAdd {
+			if prev.IdxToBlockHeight == heightToAdd-1 {
 				// should merge two intervals into one.
 				blkIndexed.IdxFromBlockHeight = prev.IdxFromBlockHeight
 				return RemoveFromBlockIndexedInterval(slice, prevIndex)

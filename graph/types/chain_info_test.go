@@ -128,10 +128,16 @@ func TestIndexBlockHeightToInterval(t *testing.T) {
 			blockIntervals(3, 4, 6, 6, 8, 10),
 		},
 		{
-			"3~4,6~6,8~10 add blk 7 = 3~4,6,10",
+			"3~4,6~6,8~10 add blk 7 = 3~4,6~10",
 			blockIntervals(3, 4, 6, 6, 8, 10),
 			7,
 			blockIntervals(3, 4, 6, 10),
+		},
+		{
+			"3~4,6~6,8~10 add blk 5 = 3~6,8~10",
+			blockIntervals(3, 4, 6, 6, 8, 10),
+			5,
+			blockIntervals(3, 6, 8, 10),
 		},
 	}
 
