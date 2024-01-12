@@ -8,7 +8,7 @@ build:
 
 ## Indexer
 run:
-	go run main.go start
+	go run main.go start --block 8713586
 
 # Generate GraphQL code
 generate:
