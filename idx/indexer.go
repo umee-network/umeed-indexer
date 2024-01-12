@@ -125,8 +125,8 @@ func (i *Indexer) IndexBlocksFromTo(ctx context.Context, from, to int, cosmosMsg
 		if !types.NeedsToIndex(cosmosMsgs, blockHeight) {
 			continue
 		}
-		i.logger.Debug().Int("blockHeight", blockHeight).Msg("indexing old block")
 
+		i.logger.Debug().Int("blockHeight", blockHeight).Msg("indexing old block")
 		wg.Add(1) // what takes a lot of time is querying blocks from node
 		go func(blockHeight int) {
 			defer wg.Done()

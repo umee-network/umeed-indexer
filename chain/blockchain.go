@@ -10,16 +10,12 @@ import (
 	"strings"
 	"sync"
 
-	cmtquery "github.com/cometbft/cometbft/libs/pubsub/query"
-	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	types "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/types/query"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	umeeapp "github.com/umee-network/umee/v6/app"
 	umeeparams "github.com/umee-network/umee/v6/app/params"
@@ -28,20 +24,16 @@ import (
 const (
 	// ignoredField tendermint has parameters that are not being used.
 	ignoredField = "ignored-field"
-	// default pagination limit
-	defaultLimit = 10000
 )
 
 // Blockchain defines the structure to get information about the chain.
 type Blockchain struct {
-	conn *Conn
-
-	muRpcID   sync.Mutex
+	mu        sync.Mutex
+	conn      *Conn
 	rpcRespID uint32
 
 	chainID string
 
-	qBank              banktypes.QueryClient
 	umeeEncodingConfig testutil.TestEncodingConfig
 }
 
@@ -65,7 +57,6 @@ func NewBlockchain(rpc, grpc string) (*Blockchain, error) {
 		conn:               conn,
 		rpcRespID:          0,
 		chainID:            "",
-		qBank:              banktypes.NewQueryClient(conn.grpcConn),
 		umeeEncodingConfig: encodingConfig,
 	}, nil
 }
@@ -79,40 +70,10 @@ func umeeModBasics() (modules []module.AppModuleBasic) {
 	return modules
 }
 
-// DenomsMetadata queries the chain and returns all the denoms metadata available.
-func (b *Blockchain) DenomsMetadata(ctx context.Context) (denomsMetadata []banktypes.Metadata, err error) {
-	resp, err := b.qBank.DenomsMetadata(ctx, &banktypes.QueryDenomsMetadataRequest{
-		Pagination: defaultPaginationRequest(),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("error querying denoms metadata: %w", err)
-	}
-	return resp.Metadatas, nil
-}
-
-// DenomMetadata queries the chain and returns the metadata from that denom.
-func (b *Blockchain) DenomMetadata(ctx context.Context, denom string) (denomMetadata banktypes.Metadata, err error) {
-	resp, err := b.qBank.DenomMetadata(ctx, &banktypes.QueryDenomMetadataRequest{
-		Denom: denom,
-	})
-	if err != nil {
-		return denomMetadata, fmt.Errorf("error querying denom: %s - metadata: %w", denom, err)
-	}
-	return resp.Metadata, nil
-}
-
-// SubscribeEvents subscribe to all the events of tendermint Tx.
-func (b *Blockchain) SubscribeEvents(ctx context.Context) (outNewEvt <-chan ctypes.ResultEvent, err error) {
-	queryStr := fmt.Sprintf(
-		"%s='%s'",
-		tmtypes.EventTypeKey, tmtypes.EventTx,
-	)
-
-	return b.conn.websocketRPC.Subscribe(ctx, ignoredField, cmtquery.MustParse(queryStr).String())
-}
-
 // SubscribeNewBlock subscribe to every new block.
 func (b *Blockchain) SubscribeNewBlock(ctx context.Context) (cNewBlock <-chan *tmtypes.Block, err error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	chanResultEvtNewBlock, err := b.conn.websocketRPC.Subscribe(ctx, ignoredField, tmtypes.EventQueryNewBlock.String())
 	if err != nil {
 		return nil, err
@@ -141,8 +102,8 @@ func (b *Blockchain) SubscribeNewBlock(ctx context.Context) (cNewBlock <-chan *t
 // JSONRPCID returns a value for the JSON RPC ID.
 // Used to control responses from the rpc query.
 func (b *Blockchain) JSONRPCID() uint32 {
-	b.muRpcID.Lock()
-	defer b.muRpcID.Unlock()
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	b.rpcRespID++
 	return b.rpcRespID
 }
@@ -207,15 +168,10 @@ func (b *Blockchain) makeRPCRequest(req any, responseStruct any) error {
 	return nil
 }
 
-// defaultPaginationRequest provides a default pagination request for querying the network.
-func defaultPaginationRequest() *query.PageRequest {
-	return &query.PageRequest{
-		Limit: defaultLimit,
-	}
-}
-
 // Block returns the block for that given height
 func (b *Blockchain) Block(ctx context.Context, height int64) (blk *tmtypes.Block, minimumBlkHeight int, err error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	blkResult, err := b.conn.websocketRPC.Block(ctx, &height)
 	if err != nil {
 		// usually a node does not have all the blocks, in this case we could parse the last block that node has available and start from there.
