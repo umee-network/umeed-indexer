@@ -16,6 +16,10 @@ var (
 			ProtoMsgName:  MsgNameLiquidate,
 			BlocksIndexed: []*BlockIndexedInterval{},
 		},
+		{
+			ProtoMsgName:  MsgNameLeveragedLiquidate,
+			BlocksIndexed: []*BlockIndexedInterval{},
+		},
 	}
 	_ sort.Interface = BlockIndexedIntervalSorter{}
 )
@@ -29,6 +33,29 @@ func DefaultChainInfo(chainID string) *ChainInfo {
 		CosmosMsgs:                defaultCosmosMsgs,
 		LastBlockHeightReceived:   0,
 		LastBlockTimeUnixReceived: 0,
+	}
+}
+
+// MergeWithDefault merge with the default of chain info if needed.
+func (c *ChainInfo) MergeWithDefault() {
+	if len(c.CosmosMsgs) == 0 {
+		c.CosmosMsgs = defaultCosmosMsgs
+	}
+
+	for _, dftCosmoMsg := range defaultCosmosMsgs {
+		defaultExist := false
+		for _, cosmoMsg := range c.CosmosMsgs {
+			if !strings.EqualFold(cosmoMsg.ProtoMsgName, dftCosmoMsg.ProtoMsgName) {
+				continue
+			}
+			defaultExist = true
+			break
+		}
+
+		if defaultExist {
+			continue
+		}
+		c.CosmosMsgs = append(c.CosmosMsgs, dftCosmoMsg)
 	}
 }
 
@@ -118,7 +145,7 @@ func (c *ChainInfo) IndexBlockHeight(blkHeight int) {
 }
 
 // IndexBlockHeightForMsg updates the internal values of cosmos msgs of the current block indexed.
-func (c *ChainInfo) IndexBlockHeightForMsg(msgName string, blkHeight int) {
+func (c *ChainInfo) IndexBlockHeightForMsg(msgName string, blkHeight int) (indexed bool) {
 	// TODO: add tests.
 	for _, cosmosMsg := range c.CosmosMsgs {
 		if !strings.EqualFold(msgName, cosmosMsg.ProtoMsgName) {
@@ -131,7 +158,9 @@ func (c *ChainInfo) IndexBlockHeightForMsg(msgName string, blkHeight int) {
 		sort.Sort(BlockIndexedIntervalSorter(cosmosMsg.BlocksIndexed))
 		// needs to be sorted.
 		cosmosMsg.BlocksIndexed = IndexBlockHeightToInterval(cosmosMsg.BlocksIndexed, blkHeight)
+		return true
 	}
+	return false
 }
 
 // IndexBlockHeightToInterval removes the index from the slice.

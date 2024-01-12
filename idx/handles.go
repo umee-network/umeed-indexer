@@ -29,8 +29,10 @@ func (i *Indexer) HandleBlock(ctx context.Context, blk *tmtypes.Block) error {
 		}
 	}
 
-	i.chainInfo.IndexBlock(int(blk.Height))
-	return i.UpsertChainInfo(ctx)
+	return i.chainInfo.Execute(func(info *types.ChainInfo) error {
+		info.IndexBlockHeight(int(blk.Height))
+		return i.db.UpsertChainInfo(ctx, *info)
+	})
 }
 
 // HandleTx handles the receive of new Tx from the chain.
@@ -56,7 +58,20 @@ func (i *Indexer) HandleTx(ctx context.Context, blockHeight, blockTimeUnix int, 
 // HandleMsg handles the receive of new msg from the chain Tx.
 func (i *Indexer) HandleMsg(ctx context.Context, blkHeight, blockTimeUnix int, txHash []byte, msg proto.Message) error {
 	msgName := proto.MessageName(msg)
-	i.chainInfo.IndexBlockForMsg(msgName, blkHeight)
+
+	defer func() {
+		err := i.chainInfo.Execute(func(info *types.ChainInfo) error {
+			indexed := info.IndexBlockHeightForMsg(msgName, blkHeight)
+			if !indexed {
+				return nil
+			}
+
+			return i.db.UpsertChainInfo(ctx, *info)
+		})
+		if err != nil {
+			i.logger.Err(err).Msg("no able to index block for msg")
+		}
+	}()
 
 	switch msgName {
 	case types.MsgNameLiquidate:

@@ -2,6 +2,7 @@ package idx
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -116,15 +117,33 @@ func (i *Indexer) IndexOldBlocks(ctx context.Context) {
 
 // IndexBlocksFromTo index blocks from specific heights.
 func (i *Indexer) IndexBlocksFromTo(ctx context.Context, from, to int, cosmosMsgs []*types.CosmosMsgIndexed) {
+	var wg sync.WaitGroup
+	mapBlockByHeight := make(map[int]*tmtypes.Block, to-from)
+
 	for blockHeight := from; blockHeight < to; blockHeight++ {
+		blockHeight := blockHeight
 		if !types.NeedsToIndex(cosmosMsgs, blockHeight) {
 			continue
 		}
 		i.logger.Debug().Int("blockHeight", blockHeight).Msg("indexing old block")
 
-		blk, _, err := i.b.Block(ctx, int64(blockHeight))
-		if err != nil {
-			i.logger.Err(err).Int("blockHeight", blockHeight).Msg("error getting old block from blockchain")
+		wg.Add(1) // what takes a lot of time is querying blocks from node
+		go func(blockHeight int) {
+			defer wg.Done()
+			blk, _, err := i.b.Block(ctx, int64(blockHeight))
+			if err != nil {
+				i.logger.Err(err).Int("blockHeight", blockHeight).Msg("error getting old block from blockchain")
+				return
+			}
+			mapBlockByHeight[blockHeight] = blk
+
+		}(blockHeight)
+	}
+
+	wg.Wait()
+	for blockHeight := from; blockHeight < to; blockHeight++ {
+		blk, ok := mapBlockByHeight[blockHeight]
+		if !ok {
 			continue
 		}
 
@@ -132,6 +151,7 @@ func (i *Indexer) IndexBlocksFromTo(ctx context.Context, from, to int, cosmosMsg
 			i.logger.Err(err).Int("blockHeight", blockHeight).Msg("error handling old block")
 		}
 	}
+
 }
 
 // UpsertChainInfo updates the chain info.

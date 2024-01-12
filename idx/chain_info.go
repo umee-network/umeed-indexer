@@ -15,6 +15,7 @@ type SafeChainInfo struct {
 
 // NewSafeChainInfo returns a chainInfo safe structure.
 func NewSafeChainInfo(info *types.ChainInfo) *SafeChainInfo {
+	info.MergeWithDefault()
 	return &SafeChainInfo{
 		ChainInfo: info,
 	}
