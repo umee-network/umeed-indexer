@@ -71,22 +71,97 @@ func TestLowestBlockHeightToIndex(t *testing.T) {
 	}
 }
 
+func TestIndexBlockHeightToInterval(t *testing.T) {
+	tcs := []struct {
+		title          string
+		intervals      []*types.BlockIndexedInterval
+		blkHeightToAdd int
+
+		expected []*types.BlockIndexedInterval
+	}{
+		{
+			"empty, add blk 1 = 1 ~ 1",
+			[]*types.BlockIndexedInterval{},
+			1,
+			blockIntervals(1, 1),
+		},
+		{
+			"empty, add blk 15 = 15 ~ 15",
+			[]*types.BlockIndexedInterval{},
+			15,
+			blockIntervals(15, 15),
+		},
+		{
+			"3~4, add blk 15 = 3 ~ 4, 15 ~ 15",
+			blockIntervals(3, 4),
+			15,
+			blockIntervals(3, 4, 15, 15),
+		},
+		{
+			"3~4, add blk 3 = 3 ~ 4",
+			blockIntervals(3, 4),
+			3,
+			blockIntervals(3, 4),
+		},
+		{
+			"3~4, add blk 5 = 3 ~ 5",
+			blockIntervals(3, 4),
+			5,
+			blockIntervals(3, 5),
+		},
+		{
+			"3~4,7~10 add blk 8 = 3~4,7~10",
+			blockIntervals(3, 4, 7, 10),
+			8,
+			blockIntervals(3, 4, 7, 10),
+		},
+		{
+			"3~4,7~10 add blk 5 = 3~5,7~10",
+			blockIntervals(3, 4, 7, 10),
+			5,
+			blockIntervals(3, 5, 7, 10),
+		},
+		{
+			"3~4,8~10 add blk 6 = 3~4,6~6,8~10",
+			blockIntervals(3, 4, 8, 10),
+			6,
+			blockIntervals(3, 4, 6, 6, 8, 10),
+		},
+		{
+			"3~4,6~6,8~10 add blk 7 = 3~4,6,10",
+			blockIntervals(3, 4, 6, 6, 8, 10),
+			7,
+			blockIntervals(3, 4, 6, 10),
+		},
+	}
+
+	for _, tc := range tcs {
+		tc := tc
+		t.Run(tc.title, func(t *testing.T) {
+			act := types.IndexBlockHeightToInterval(tc.intervals, tc.blkHeightToAdd)
+			require.Equal(t, tc.expected, act)
+		})
+	}
+}
+
 func msgCosmosLiquidate(fromTos ...int) (msg *types.CosmosMsgIndexed) {
 	return msgCosmos(types.MsgNameLiquidate, fromTos...)
 }
 
 func msgCosmos(name string, fromTos ...int) (msg *types.CosmosMsgIndexed) {
-	msg = &types.CosmosMsgIndexed{
+	return &types.CosmosMsgIndexed{
 		ProtoMsgName:  name,
-		BlocksIndexed: make([]*types.BlockIndexedInterval, 0, len(fromTos)/2),
+		BlocksIndexed: blockIntervals(fromTos...),
 	}
+}
 
+func blockIntervals(fromTos ...int) (intervals []*types.BlockIndexedInterval) {
+	intervals = make([]*types.BlockIndexedInterval, 0, len(fromTos)/2)
 	for i := 0; i < len(fromTos); i += 2 {
-		msg.BlocksIndexed = append(msg.BlocksIndexed, &types.BlockIndexedInterval{
+		intervals = append(intervals, &types.BlockIndexedInterval{
 			IdxFromBlockHeight: fromTos[i],
 			IdxToBlockHeight:   fromTos[i+1],
 		})
 	}
-
-	return msg
+	return intervals
 }

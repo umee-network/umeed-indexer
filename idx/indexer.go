@@ -118,7 +118,7 @@ func (i *Indexer) IndexOldBlocks(ctx context.Context) {
 // IndexBlocksFromTo index blocks from specific heights.
 func (i *Indexer) IndexBlocksFromTo(ctx context.Context, from, to int, cosmosMsgs []*types.CosmosMsgIndexed) {
 	var wg sync.WaitGroup
-	mapBlockByHeight := make(map[int]*tmtypes.Block, to-from)
+	mapBlockByHeight := make(map[int]*tmtypes.Block)
 
 	for blockHeight := from; blockHeight < to; blockHeight++ {
 		blockHeight := blockHeight

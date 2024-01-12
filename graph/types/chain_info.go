@@ -138,8 +138,6 @@ func (c *ChainInfo) IndexBlockHeight(blkHeight int) {
 		// from: 14 to 19
 		// blk: 11
 
-		sort.Sort(BlockIndexedIntervalSorter(cosmosMsg.BlocksIndexed))
-		// needs to be sorted.
 		cosmosMsg.BlocksIndexed = IndexBlockHeightToInterval(cosmosMsg.BlocksIndexed, blkHeight)
 	}
 }
@@ -155,77 +153,104 @@ func (c *ChainInfo) IndexBlockHeightForMsg(msgName string, blkHeight int) (index
 			continue
 		}
 
-		sort.Sort(BlockIndexedIntervalSorter(cosmosMsg.BlocksIndexed))
-		// needs to be sorted.
 		cosmosMsg.BlocksIndexed = IndexBlockHeightToInterval(cosmosMsg.BlocksIndexed, blkHeight)
 		return true
 	}
 	return false
 }
 
+// TODO: add test to this.
 // IndexBlockHeightToInterval removes the index from the slice.
-func IndexBlockHeightToInterval(slice []*BlockIndexedInterval, blkHeightToAdd int) []*BlockIndexedInterval {
+func IndexBlockHeightToInterval(slice []*BlockIndexedInterval, heightToAdd int) []*BlockIndexedInterval {
+	itemToAdd := &BlockIndexedInterval{IdxFromBlockHeight: heightToAdd, IdxToBlockHeight: heightToAdd}
+
+	if len(slice) == 0 {
+		return []*BlockIndexedInterval{itemToAdd}
+	}
+
+	// needs to be sorted.
+	sort.Sort(BlockIndexedIntervalSorter(slice))
+
 	for i, blkIndexed := range slice {
 		from, to := blkIndexed.IdxFromBlockHeight, blkIndexed.IdxToBlockHeight
+		if heightToAdd >= from && heightToAdd <= to {
+			// height was already indexed, return the slice.
+			return slice
+		}
 
-		if blkHeightToAdd == to+1 {
-			isLastOnSlice := i+1 == len(slice)
+		isLastOnSlice := i+1 == len(slice)
+		nextIndex := i + 1
 
+		if heightToAdd == to+1 {
 			if isLastOnSlice {
 				// it is just increasing one block from the last interval
-				blkIndexed.IdxToBlockHeight = blkHeightToAdd
+				blkIndexed.IdxToBlockHeight = heightToAdd
 				return slice
 			}
-			nextIndex := i + 1
 			// not the last index on array, it has next interval
 			next := slice[nextIndex]
-			if next.IdxFromBlockHeight == blkHeightToAdd {
+			if next.IdxFromBlockHeight == heightToAdd+1 {
 				// should merge two intervals into one.
 				blkIndexed.IdxToBlockHeight = next.IdxToBlockHeight
 				return RemoveFromBlockIndexedInterval(slice, nextIndex)
 			}
 
 			// if the next item is not going to join interval, just increase the current blkIndexed
-			blkIndexed.IdxToBlockHeight = blkHeightToAdd
+			blkIndexed.IdxToBlockHeight = heightToAdd
 			return slice
 		}
 
-		if blkHeightToAdd == from-1 {
+		if heightToAdd == from-1 {
 
 			isFirstOnSlice := i == 0
 			if isFirstOnSlice {
 				// just include the new indexed block into the first interval
-				blkIndexed.IdxFromBlockHeight = blkHeightToAdd
+				blkIndexed.IdxFromBlockHeight = heightToAdd
 				break
 			}
 
 			prevIndex := i - 1
 			prev := slice[prevIndex]
-			if prev.IdxToBlockHeight == blkHeightToAdd {
+			if prev.IdxToBlockHeight == heightToAdd {
 				// should merge two intervals into one.
 				blkIndexed.IdxFromBlockHeight = prev.IdxFromBlockHeight
 				return RemoveFromBlockIndexedInterval(slice, prevIndex)
 			}
 
 			// if the prev item is not going to join interval, just decrease the current blkIndexed
-			blkIndexed.IdxFromBlockHeight = blkHeightToAdd
+			blkIndexed.IdxFromBlockHeight = heightToAdd
 			return slice
 		}
+
+		if isLastOnSlice { // just break and add to the end
+			break
+		}
+
+		// since we sorted before, it is ordered and we can check the interval for the next
+		next := slice[nextIndex]
+		if heightToAdd < next.IdxFromBlockHeight { // insert at that position
+			return append(slice[:nextIndex], append([]*BlockIndexedInterval{itemToAdd}, slice[nextIndex:]...)...)
+		}
+
 	}
 
-	// if there is no interval neighbor (with one block heigh diff)
-	// include a new interval into the slice
-	idx := sort.Search(len(slice), func(i int) bool { return slice[i].IdxToBlockHeight < blkHeightToAdd })
-	itemToAdd := &BlockIndexedInterval{IdxFromBlockHeight: blkHeightToAdd, IdxToBlockHeight: blkHeightToAdd}
-	if idx == len(slice) {
-		return append(slice, itemToAdd)
-	}
+	// not neighbour of any interval, append to the end
+	return append(slice, itemToAdd)
+	// // if there is no interval neighbor (with one block heigh diff)
+	// // include a new interval into the slice
 
-	// insert sorted.
-	slice = append(slice[:idx+1], slice[idx:]...)
-	// Insert the new element.
-	slice[idx] = itemToAdd
-	return slice
+	// idx := sort.Search(len(slice), func(i int) bool { return slice[i].IdxToBlockHeight < heightToAdd })
+	// itemToAdd := &BlockIndexedInterval{IdxFromBlockHeight: blkHeightToAdd, IdxToBlockHeight: blkHeightToAdd}
+
+	// if idx+1 == len(slice) {
+	// 	return append(slice, itemToAdd)
+	// }
+
+	// // insert sorted.
+	// slice = append(slice[:idx+1], slice[idx:]...)
+	// // Insert the new element.
+	// slice[idx] = itemToAdd
+	// return slice
 }
 
 // RemoveFromBlockIndexedInterval removes the index from the slice.
