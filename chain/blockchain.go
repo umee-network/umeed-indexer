@@ -72,8 +72,6 @@ func umeeModBasics() (modules []module.AppModuleBasic) {
 
 // SubscribeNewBlock subscribe to every new block.
 func (b *Blockchain) SubscribeNewBlock(ctx context.Context) (cNewBlock <-chan *tmtypes.Block, err error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
 	chanResultEvtNewBlock, err := b.conn.websocketRPC.Subscribe(ctx, ignoredField, tmtypes.EventQueryNewBlock.String())
 	if err != nil {
 		return nil, err
@@ -170,6 +168,7 @@ func (b *Blockchain) makeRPCRequest(req any, responseStruct any) error {
 
 // Block returns the block for that given height
 func (b *Blockchain) Block(ctx context.Context, height int64) (blk *tmtypes.Block, minimumBlkHeight int, err error) {
+	// it pannics inside cometBFT if the mutex is not used.
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	blkResult, err := b.conn.websocketRPC.Block(ctx, &height)
@@ -179,7 +178,6 @@ func (b *Blockchain) Block(ctx context.Context, height int64) (blk *tmtypes.Bloc
 		errString := err.Error()
 		searchStrInErr := fmt.Sprintf("Internal error: height %d is not available, lowest height is ", height)
 		idx := strings.Index(errString, searchStrInErr)
-		// error in json rpc client, with http response metadata: (Status: 200 OK, Protocol HTTP/1.1). RPC error -32603 - Internal error: height 1 is not available, lowest height is 7942001
 		if idx == -1 {
 			return nil, 0, err
 		}
@@ -192,4 +190,21 @@ func (b *Blockchain) Block(ctx context.Context, height int64) (blk *tmtypes.Bloc
 	}
 	blk = blkResult.Block
 	return blk, int(blk.Height), nil
+}
+
+// CheckTx returns nil if the tx was processed correctly without any errors.
+func (b *Blockchain) CheckTx(ctx context.Context, tx tmtypes.Tx) (err error) {
+	// it pannics inside cometBFT if the mutex is not used.
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	resultTx, err := b.conn.websocketRPC.CheckTx(ctx, tx)
+	if err != nil {
+		return err
+	}
+
+	if resultTx.IsErr() {
+		return fmt.Errorf("error checking tx %s - %+v", tx.Hash(), resultTx)
+	}
+
+	return nil
 }

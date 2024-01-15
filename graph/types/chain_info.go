@@ -64,9 +64,9 @@ func (c *ChainInfo) MergeWithDefault() {
 func MergeCosmosMsgIndexedWithDefaults(msgs ...*CosmosMsgIndexed) []*CosmosMsgIndexed {
 	cosmosMsgs := msgs
 
-	for _, dftMsg := range defaultCosmosMsgs { // 1, 2, 3
+	for _, dftMsg := range defaultCosmosMsgs {
 		contains := false
-		for _, msg := range msgs { // 4,2,5
+		for _, msg := range msgs {
 			if !strings.EqualFold(msg.ProtoMsgName, dftMsg.ProtoMsgName) {
 				continue
 			}
@@ -97,6 +97,20 @@ func (c *ChainInfo) NeedsToIndex(blockHeight int) bool {
 // NeedsToIndex returns true if the given block height needs to be indexed.
 func NeedsToIndex(cosmosMsgs []*CosmosMsgIndexed, blockHeight int) bool {
 	for _, cosmosMsg := range cosmosMsgs {
+		if BlockAlreadyIndexed(blockHeight, cosmosMsg.BlocksIndexed) {
+			continue
+		}
+		return true
+	}
+	return false
+}
+
+// NeedsToIndexForMsg returns true if the given block height needs to be indexed.
+func NeedsToIndexForMsg(protoMsgToIndex string, cosmosMsgs []*CosmosMsgIndexed, blockHeight int) bool {
+	for _, cosmosMsg := range cosmosMsgs {
+		if !strings.EqualFold(cosmosMsg.ProtoMsgName, protoMsgToIndex) {
+			continue
+		}
 		if BlockAlreadyIndexed(blockHeight, cosmosMsg.BlocksIndexed) {
 			continue
 		}

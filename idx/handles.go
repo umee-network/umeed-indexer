@@ -25,7 +25,8 @@ func (i *Indexer) HandleNewBlock(ctx context.Context, blk *tmtypes.Block) error 
 func (i *Indexer) HandleBlock(ctx context.Context, blk *tmtypes.Block) error {
 	for _, tx := range blk.Data.Txs {
 		if err := i.HandleTx(ctx, int(blk.Header.Height), int(blk.Time.Unix()), tx); err != nil {
-			return err
+			i.logger.Err(err).Int64("height", blk.Height).Msg("error handling block")
+			continue
 		}
 	}
 
@@ -47,7 +48,7 @@ func (i *Indexer) HandleTx(ctx context.Context, blockHeight, blockTimeUnix int, 
 	txMsgs := tx.GetMsgs()
 
 	for _, msg := range txMsgs {
-		if err := i.HandleMsg(ctx, blockHeight, blockTimeUnix, txHash, msg); err != nil {
+		if err := i.HandleMsg(ctx, blockHeight, blockTimeUnix, tmTx, txHash, msg); err != nil {
 			i.logger.Err(err).Msg("error handling msg")
 			continue
 		}
@@ -56,22 +57,8 @@ func (i *Indexer) HandleTx(ctx context.Context, blockHeight, blockTimeUnix int, 
 }
 
 // HandleMsg handles the receive of new msg from the chain Tx.
-func (i *Indexer) HandleMsg(ctx context.Context, blkHeight, blockTimeUnix int, txHash []byte, msg proto.Message) error {
+func (i *Indexer) HandleMsg(ctx context.Context, blkHeight, blockTimeUnix int, tmTx tmtypes.Tx, txHash []byte, msg proto.Message) error {
 	msgName := proto.MessageName(msg)
-
-	defer func() {
-		err := i.chainInfo.Execute(func(info *types.ChainInfo) error {
-			indexed := info.IndexBlockHeightForMsg(msgName, blkHeight)
-			if !indexed {
-				return nil
-			}
-
-			return i.db.UpsertChainInfo(ctx, *info)
-		})
-		if err != nil {
-			i.logger.Err(err).Msg("no able to index block for msg")
-		}
-	}()
 
 	switch msgName {
 	case types.MsgNameLiquidate:
@@ -82,12 +69,7 @@ func (i *Indexer) HandleMsg(ctx context.Context, blkHeight, blockTimeUnix int, t
 		}
 
 		i.logger.Debug().Msg("storing msg liquidate")
-		return i.chainInfo.Execute(func(info *types.ChainInfo) error {
-			if !info.NeedsToIndex(blkHeight) {
-				i.logger.Debug().Msg("no need to store msg liquidate for this block height")
-				return nil
-			}
-
+		return i.indexMsg(ctx, msgName, blkHeight, tmTx, func(info *types.ChainInfo) error {
 			return i.db.StoreMsgLiquidate(ctx, *info, blkHeight, blockTimeUnix, txHash, types.ParseTxLiquidate(msgLiq))
 		})
 	case types.MsgNameLeveragedLiquidate:
@@ -98,16 +80,29 @@ func (i *Indexer) HandleMsg(ctx context.Context, blkHeight, blockTimeUnix int, t
 		}
 
 		i.logger.Debug().Msg("storing msg leverage liquidate")
-		return i.chainInfo.Execute(func(info *types.ChainInfo) error {
-			if !info.NeedsToIndex(blkHeight) {
-				i.logger.Debug().Msg("no need to store msg leverage liquidate for this block height")
-				return nil
-			}
-
+		return i.indexMsg(ctx, msgName, blkHeight, tmTx, func(info *types.ChainInfo) error {
 			return i.db.StoreMsgLeverageLiquidate(ctx, *info, blkHeight, blockTimeUnix, txHash, types.ParseTxLeverageLiquidate(msgLevLiq))
 		})
 	default:
 		// i.logger.Debug().Str("messageName", msgName).Msg("no handle for msg")
 	}
 	return nil
+}
+
+// indexMsg verifies if there is a need to stores that msg in the tx and if there is, verify if the tx was already processed.
+func (i *Indexer) indexMsg(ctx context.Context, msgName string, blkHeight int, tmTx tmtypes.Tx, store func(info *types.ChainInfo) error) error {
+	return i.chainInfo.Execute(func(info *types.ChainInfo) error {
+		if !types.NeedsToIndexForMsg(msgName, info.CosmosMsgs, blkHeight) {
+			i.logger.Debug().Str("messageName", msgName).Int("height", blkHeight).Msg("no need to store msg for this block height")
+			return nil
+		}
+
+		if err := i.b.CheckTx(ctx, tmTx); err != nil {
+			i.logger.Err(err).Str("messageName", msgName).Int("height", blkHeight).Msg("tx failed, no need to store")
+			return err
+		}
+
+		i.logger.Debug().Str("messageName", msgName).Int("height", blkHeight).Msg("storing msg into db")
+		return store(info)
+	})
 }
