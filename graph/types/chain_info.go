@@ -299,7 +299,8 @@ func LowestBlockHeightToIndex(cosmosMsgs []*CosmosMsgIndexed, minHeight int) (bl
 				// next possible block is lower than the minHeight
 				continue
 			}
-			if !blockHeightSetByMsg && blockIdxed.IdxFromBlockHeight > minHeight { // minheight was not indexed yet.
+			if !blockHeightSetByMsg && blockIdxed.IdxFromBlockHeight > minHeight { // minHeight was not indexed yet.
+				blockHeightSetByMsg = true
 				blockHeight = minHeight
 				continue
 			}
