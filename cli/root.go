@@ -3,8 +3,11 @@ package cli
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/spf13/cobra"
 	"github.com/umee-network/umeed-indexer/chain"
 	"github.com/umee-network/umeed-indexer/database"
@@ -17,6 +20,8 @@ const (
 	EnvChainRPC            = "CHAIN_RPC"
 	EnvChainGRPC           = "CHAIN_GRPC"
 	FlagMinimumBlockHeight = "block"
+	FlagRunWithAPI         = "api"
+	defaultPort            = "8080"
 )
 
 var (
@@ -73,11 +78,39 @@ func CmdStartIndex() *cobra.Command {
 				return err
 			}
 
+			runAPI, err := cmd.Flags().GetBool(FlagRunWithAPI)
+			if err != nil {
+				return err
+			}
+
+			if runAPI {
+				r, err := server.NewRouter(ctx, db, logger)
+				if err != nil {
+					return err
+				}
+
+				// Route handling
+				// Endpoint: http://localhost:8080/graphql
+				// Subscriptions endpoint: ws://localhost:8080/graphql
+				r.HandleFunc("/", playground.ApolloSandboxHandler("GraphQL Apollo playground", "/graphql"))
+				r.HandleFunc("/default", playground.Handler("GraphQL playground", "/graphql"))
+				r.HandleFunc("/altair", playground.AltairHandler("GraphQL Altair playground", "/graphql"))
+
+				port := os.Getenv("PORT")
+				if port == "" {
+					port = defaultPort
+				}
+				// Start the server
+				logger.Info().Msgf("connect to http://localhost:%s/ for GraphQL playground", port)
+				log.Fatal(http.ListenAndServe(":"+port, r))
+			}
+
 			return i.Index(ctx)
 		},
 	}
 
 	cmd.Flags().Int(FlagMinimumBlockHeight, 1, fmt.Sprintf("%s=100 to start indexing from block 100", FlagMinimumBlockHeight))
+	cmd.Flags().Bool(FlagRunWithAPI, false, fmt.Sprintf("%s=true to start by serving an API which can query the db by using graphql", FlagRunWithAPI))
 	return cmd
 }
 

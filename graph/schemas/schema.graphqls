@@ -47,3 +47,7 @@ type MsgLeverageLiquidate {
     rewardDenom: String! @goTag(key: "firestore", value: "rewardDenom")
     maxRepay: String! @goTag(key: "firestore", value: "maxRepay")
 }
+
+type Query {
+    getLiquidateMsgs(borrower: String!): [IndexedTx!]!
+}
