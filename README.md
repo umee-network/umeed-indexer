@@ -76,3 +76,64 @@ make run-firestore
 make run
 ```
 
+### API - Graphql
+
+- if the api is run with the flag `--api`, you can access the graphql playground -> http://localhost:8080/ and query for liquidate msgs
+
+#### Operation
+
+```graphql
+query Query($borrower: String!) {
+  getLiquidateMsgs(borrower: $borrower) {
+    blockHeight
+    blockTimeUnix
+    msgLeverageLiquidate {
+      borrower
+      liquidator
+      maxRepay
+      repayDenom
+      rewardDenom
+    }
+    msgLiquidate {
+      borrower
+      liquidator
+      repayment
+      rewardDenom
+    }
+    protoMsgName
+    txHash
+  }
+}
+```
+
+#### Variables
+
+```json
+{
+  "borrower": "umee10xnqv49h7hh0gfspl7pq6w5nfqtkvj4ru0ekd9"
+}
+```
+
+#### Result
+
+```json
+{
+  "data": {
+    "getLiquidateMsgs": [
+      {
+        "blockHeight": 9063675,
+        "blockTimeUnix": 1698960400,
+        "msgLeverageLiquidate": null,
+        "msgLiquidate": {
+          "borrower": "umee10xnqv49h7hh0gfspl7pq6w5nfqtkvj4ru0ekd9",
+          "liquidator": "umee143yuzruftl89237ysg8zk0rlpy30dqrj6x9l2v",
+          "repayment": "8767811ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518",
+          "rewardDenom": "ibc/6B49A789937D4E50BF01F0F50DDEDF5C1103EDF01306B7021BDF23BDE65D99BA"
+        },
+        "protoMsgName": "umee.leverage.v1.MsgLiquidate",
+        "txHash": "26849e073f66dac8a5d9b1527d1514af6d86f2689909474a7586cfacfca7405a"
+      }
+    ]
+  }
+}
+```
