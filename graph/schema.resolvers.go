@@ -6,14 +6,13 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/umee-network/umeed-indexer/graph/types"
 )
 
 // GetLiquidateMsgs is the resolver for the getLiquidateMsgs field.
-func (r *queryResolver) GetLiquidateMsgs(ctx context.Context, borrower string) ([]*types.IndexedTx, error) {
-	panic(fmt.Errorf("not implemented: GetLiquidateMsgs - getLiquidateMsgs"))
+func (r *queryResolver) GetLiquidateMsgs(ctx context.Context, chainID *string, borrower string) ([]*types.IndexedTx, error) {
+	return r.db.GetLiquidateMsgs(ctx, defaultChainID(chainID), borrower)
 }
 
 // Query returns QueryResolver implementation.

@@ -88,12 +88,12 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetLiquidateMsgs func(childComplexity int, borrower string) int
+		GetLiquidateMsgs func(childComplexity int, chainID *string, borrower string) int
 	}
 }
 
 type QueryResolver interface {
-	GetLiquidateMsgs(ctx context.Context, borrower string) ([]*types.IndexedTx, error)
+	GetLiquidateMsgs(ctx context.Context, chainID *string, borrower string) ([]*types.IndexedTx, error)
 }
 
 type executableSchema struct {
@@ -286,7 +286,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetLiquidateMsgs(childComplexity, args["borrower"].(string)), true
+		return e.complexity.Query.GetLiquidateMsgs(childComplexity, args["chainID"].(*string), args["borrower"].(string)), true
 
 	}
 	return 0, false
@@ -414,15 +414,24 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_getLiquidateMsgs_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["borrower"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("borrower"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg0 *string
+	if tmp, ok := rawArgs["chainID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("chainID"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["borrower"] = arg0
+	args["chainID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["borrower"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("borrower"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["borrower"] = arg1
 	return args, nil
 }
 
@@ -1518,7 +1527,7 @@ func (ec *executionContext) _Query_getLiquidateMsgs(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetLiquidateMsgs(rctx, fc.Args["borrower"].(string))
+		return ec.resolvers.Query().GetLiquidateMsgs(rctx, fc.Args["chainID"].(*string), fc.Args["borrower"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

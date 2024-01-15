@@ -203,7 +203,7 @@ func (b *Blockchain) CheckTx(ctx context.Context, tx tmtypes.Tx) (err error) {
 	}
 
 	if resultTx.IsErr() {
-		return fmt.Errorf("error checking tx %s - %+v", tx.Hash(), resultTx)
+		return fmt.Errorf("error checking tx %s - %+v", tx.String(), resultTx)
 	}
 
 	return nil

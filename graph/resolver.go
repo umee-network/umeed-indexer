@@ -8,6 +8,7 @@ import (
 // This file will not be regenerated automatically.
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
+const DefaultChainID = "umee-1"
 
 type Resolver struct {
 	db     database.Database
@@ -20,4 +21,11 @@ func NewResolver(db database.Database, logger zerolog.Logger) *Resolver {
 		db:     db,
 		logger: logger,
 	}
+}
+
+func defaultChainID(chainID *string) string {
+	if chainID != nil {
+		return *chainID
+	}
+	return DefaultChainID
 }

@@ -98,11 +98,11 @@ func (i *Indexer) indexMsg(ctx context.Context, msgName string, blkHeight int, t
 		}
 
 		if err := i.b.CheckTx(ctx, tmTx); err != nil {
-			i.logger.Err(err).Str("messageName", msgName).Int("height", blkHeight).Msg("tx failed, no need to store")
+			i.logger.Err(err).Str("messageName", msgName).Bytes("txHash", tmTx.Hash()).Int("height", blkHeight).Msg("tx failed, no need to store")
 			return err
 		}
 
-		i.logger.Debug().Str("messageName", msgName).Int("height", blkHeight).Msg("storing msg into db")
+		i.logger.Debug().Str("messageName", msgName).Bytes("txHash", tmTx.Hash()).Int("height", blkHeight).Msg("storing msg into db")
 		return store(info)
 	})
 }

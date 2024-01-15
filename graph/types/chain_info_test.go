@@ -60,6 +60,14 @@ func TestLowestBlockHeightToIndex(t *testing.T) {
 			100,
 			103,
 		},
+		{
+			"interval 8713586 ~ 8739758, 10149582 ~ 10153387 min height 100 = 103",
+			[]*types.CosmosMsgIndexed{
+				msgCosmosLiquidate(8713586, 8739758, 10149582, 10153387),
+			},
+			9063670,
+			9063670,
+		},
 	}
 
 	for _, tc := range tcs {

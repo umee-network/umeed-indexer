@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/umee-network/umeed-indexer/database"
 	"github.com/umee-network/umeed-indexer/idx"
 	"github.com/umee-network/umeed-indexer/server"
+	"golang.org/x/sync/errgroup"
 )
 
 // TODO: check to remove env and receive as flags with default value...
@@ -83,6 +83,8 @@ func CmdStartIndex() *cobra.Command {
 				return err
 			}
 
+			g, ctx := errgroup.WithContext(ctx)
+
 			if runAPI {
 				r, err := server.NewRouter(ctx, db, logger)
 				if err != nil {
@@ -102,10 +104,16 @@ func CmdStartIndex() *cobra.Command {
 				}
 				// Start the server
 				logger.Info().Msgf("connect to http://localhost:%s/ for GraphQL playground", port)
-				log.Fatal(http.ListenAndServe(":"+port, r))
+				g.Go(func() error {
+					return http.ListenAndServe(":"+port, r)
+				})
 			}
 
-			return i.Index(ctx)
+			g.Go(func() error {
+				return i.Index(ctx)
+			})
+
+			return g.Wait()
 		},
 	}
 

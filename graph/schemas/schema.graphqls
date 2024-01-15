@@ -49,5 +49,5 @@ type MsgLeverageLiquidate {
 }
 
 type Query {
-    getLiquidateMsgs(borrower: String!): [IndexedTx!]!
+    getLiquidateMsgs(chainID: String, borrower: String!): [IndexedTx!]!
 }

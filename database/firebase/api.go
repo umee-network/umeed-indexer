@@ -2,7 +2,6 @@ package firebase
 
 import (
 	"context"
-	"time"
 
 	"cloud.google.com/go/firestore"
 	txctx "github.com/umee-network/umeed-indexer/database/firebase/context"
@@ -13,7 +12,7 @@ import (
 func (db *Database) UpsertChainInfo(ctx context.Context, info types.ChainInfo) (err error) {
 	err = db.RunTransaction(
 		ctx, func(ctx context.Context, t *firestore.Transaction) error {
-			tctx := txctx.New(ctx, time.Now(), t, db.Fs)
+			tctx := txctx.Now(ctx, t, db.Fs)
 			return upsertChainInfo(tctx, info)
 		},
 	)
@@ -24,7 +23,7 @@ func (db *Database) UpsertChainInfo(ctx context.Context, info types.ChainInfo) (
 func (db *Database) GetChainInfo(ctx context.Context, chainID string) (info *types.ChainInfo, err error) {
 	err = db.RunTransaction(
 		ctx, func(ctx context.Context, t *firestore.Transaction) error {
-			tctx := txctx.New(ctx, time.Now(), t, db.Fs)
+			tctx := txctx.Now(ctx, t, db.Fs)
 			info, err = getChainInfo(tctx, chainID)
 			return err
 		},
@@ -36,7 +35,7 @@ func (db *Database) GetChainInfo(ctx context.Context, chainID string) (info *typ
 func (db *Database) StoreMsgLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash []byte, msg types.MsgLiquidate) (err error) {
 	err = db.RunTransaction(
 		ctx, func(ctx context.Context, t *firestore.Transaction) error {
-			tctx := txctx.New(ctx, time.Now(), t, db.Fs)
+			tctx := txctx.Now(ctx, t, db.Fs)
 			err = addTx(tctx, chainInfo.ChainID, types.IndexedTx{
 				TxHash:        string(txHash),
 				ProtoMsgName:  types.MsgNameLiquidate,
@@ -58,7 +57,7 @@ func (db *Database) StoreMsgLiquidate(ctx context.Context, chainInfo types.Chain
 func (db *Database) StoreMsgLeverageLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash []byte, msg types.MsgLeverageLiquidate) (err error) {
 	err = db.RunTransaction(
 		ctx, func(ctx context.Context, t *firestore.Transaction) error {
-			tctx := txctx.New(ctx, time.Now(), t, db.Fs)
+			tctx := txctx.Now(ctx, t, db.Fs)
 			err = addTx(tctx, chainInfo.ChainID, types.IndexedTx{
 				TxHash:               string(txHash),
 				ProtoMsgName:         types.MsgNameLiquidate,
@@ -74,4 +73,17 @@ func (db *Database) StoreMsgLeverageLiquidate(ctx context.Context, chainInfo typ
 		},
 	)
 	return err
+}
+
+// GetLiquidateMsgs returns all the msgs liquidate filtering by the borrower.
+func (db *Database) GetLiquidateMsgs(ctx context.Context, chainID string, borrower string) (txs []*types.IndexedTx, err error) {
+	txs = make([]*types.IndexedTx, 0)
+	err = db.RunTransaction(
+		ctx, func(ctx context.Context, t *firestore.Transaction) error {
+			tctx := txctx.Now(ctx, t, db.Fs)
+			txs, err = getTxLiquidade(tctx, chainID, borrower)
+			return nil
+		},
+	)
+	return txs, err
 }

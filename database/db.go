@@ -45,6 +45,8 @@ type Database interface {
 	StoreMsgLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash []byte, msg types.MsgLiquidate) (err error)
 	// StoreMsgLeverageLiquidate stores a new MsgLeverageLiquidate updating the CosmosMsgIndexed.
 	StoreMsgLeverageLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash []byte, msg types.MsgLeverageLiquidate) (err error)
+	// GetLiquidateMsgs returns all the msgs liquidate filtering by the borrower.
+	GetLiquidateMsgs(ctx context.Context, chainID string, borrower string) (txs []*types.IndexedTx, err error)
 }
 
 // NewDB returns a new database instance based on the specified type.
