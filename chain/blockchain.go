@@ -197,13 +197,14 @@ func (b *Blockchain) CheckTx(ctx context.Context, tx tmtypes.Tx) (err error) {
 	// it pannics inside cometBFT if the mutex is not used.
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	resultTx, err := b.conn.websocketRPC.CheckTx(ctx, tx)
+
+	txResult, err := b.conn.websocketRPC.Tx(ctx, tx.Hash(), true)
 	if err != nil {
 		return err
 	}
 
-	if resultTx.IsErr() {
-		return fmt.Errorf("error checking tx %s - %+v", tx.String(), resultTx)
+	if txResult.TxResult.IsErr() {
+		return fmt.Errorf("error checking tx %s - %+v", tx.String(), txResult)
 	}
 
 	return nil

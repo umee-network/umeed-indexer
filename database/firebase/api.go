@@ -32,12 +32,12 @@ func (db *Database) GetChainInfo(ctx context.Context, chainID string) (info *typ
 }
 
 // StoreMsgLiquidate stores a new msgliquidate updating the CosmosMsgIndexed.
-func (db *Database) StoreMsgLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash []byte, msg types.MsgLiquidate) (err error) {
+func (db *Database) StoreMsgLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash string, msg types.MsgLiquidate) (err error) {
 	err = db.RunTransaction(
 		ctx, func(ctx context.Context, t *firestore.Transaction) error {
 			tctx := txctx.Now(ctx, t, db.Fs)
 			err = addTx(tctx, chainInfo.ChainID, types.IndexedTx{
-				TxHash:        string(txHash),
+				TxHash:        txHash,
 				ProtoMsgName:  types.MsgNameLiquidate,
 				BlockHeight:   blockHeight,
 				BlockTimeUnix: blockTimeUnix,
@@ -54,12 +54,12 @@ func (db *Database) StoreMsgLiquidate(ctx context.Context, chainInfo types.Chain
 }
 
 // StoreMsgLeverageLiquidate stores a new MsgLeverageLiquidate updating the CosmosMsgIndexed.
-func (db *Database) StoreMsgLeverageLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash []byte, msg types.MsgLeverageLiquidate) (err error) {
+func (db *Database) StoreMsgLeverageLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash string, msg types.MsgLeverageLiquidate) (err error) {
 	err = db.RunTransaction(
 		ctx, func(ctx context.Context, t *firestore.Transaction) error {
 			tctx := txctx.Now(ctx, t, db.Fs)
 			err = addTx(tctx, chainInfo.ChainID, types.IndexedTx{
-				TxHash:               string(txHash),
+				TxHash:               txHash,
 				ProtoMsgName:         types.MsgNameLiquidate,
 				BlockHeight:          blockHeight,
 				BlockTimeUnix:        blockTimeUnix,

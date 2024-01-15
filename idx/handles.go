@@ -2,6 +2,7 @@ package idx
 
 import (
 	"context"
+	"encoding/hex"
 
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -70,7 +71,7 @@ func (i *Indexer) HandleMsg(ctx context.Context, blkHeight, blockTimeUnix int, t
 
 		i.logger.Debug().Msg("storing msg liquidate")
 		return i.indexMsg(ctx, msgName, blkHeight, tmTx, func(info *types.ChainInfo) error {
-			return i.db.StoreMsgLiquidate(ctx, *info, blkHeight, blockTimeUnix, txHash, types.ParseTxLiquidate(msgLiq))
+			return i.db.StoreMsgLiquidate(ctx, *info, blkHeight, blockTimeUnix, hex.EncodeToString(tmTx.Hash()), types.ParseTxLiquidate(msgLiq))
 		})
 	case types.MsgNameLeveragedLiquidate:
 		msgLevLiq, ok := msg.(*lvgtypes.MsgLeveragedLiquidate)
@@ -81,7 +82,7 @@ func (i *Indexer) HandleMsg(ctx context.Context, blkHeight, blockTimeUnix int, t
 
 		i.logger.Debug().Msg("storing msg leverage liquidate")
 		return i.indexMsg(ctx, msgName, blkHeight, tmTx, func(info *types.ChainInfo) error {
-			return i.db.StoreMsgLeverageLiquidate(ctx, *info, blkHeight, blockTimeUnix, txHash, types.ParseTxLeverageLiquidate(msgLevLiq))
+			return i.db.StoreMsgLeverageLiquidate(ctx, *info, blkHeight, blockTimeUnix, hex.EncodeToString(tmTx.Hash()), types.ParseTxLeverageLiquidate(msgLevLiq))
 		})
 	default:
 		// i.logger.Debug().Str("messageName", msgName).Msg("no handle for msg")
@@ -98,11 +99,11 @@ func (i *Indexer) indexMsg(ctx context.Context, msgName string, blkHeight int, t
 		}
 
 		if err := i.b.CheckTx(ctx, tmTx); err != nil {
-			i.logger.Err(err).Str("messageName", msgName).Bytes("txHash", tmTx.Hash()).Int("height", blkHeight).Msg("tx failed, no need to store")
+			i.logger.Err(err).Str("messageName", msgName).Str("txHash", hex.EncodeToString(tmTx.Hash())).Int("height", blkHeight).Msg("tx failed, no need to store")
 			return err
 		}
 
-		i.logger.Debug().Str("messageName", msgName).Bytes("txHash", tmTx.Hash()).Int("height", blkHeight).Msg("storing msg into db")
+		i.logger.Debug().Str("messageName", msgName).Str("txHash", hex.EncodeToString(tmTx.Hash())).Int("height", blkHeight).Msg("storing msg into db")
 		return store(info)
 	})
 }

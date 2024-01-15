@@ -42,9 +42,9 @@ type Database interface {
 	// GetChainInfo returns the last chainInfo.
 	GetChainInfo(ctx context.Context, chainID string) (info *types.ChainInfo, err error)
 	// StoreMsgLiquidate stores a new msgliquidate updating the CosmosMsgIndexed.
-	StoreMsgLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash []byte, msg types.MsgLiquidate) (err error)
+	StoreMsgLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash string, msg types.MsgLiquidate) (err error)
 	// StoreMsgLeverageLiquidate stores a new MsgLeverageLiquidate updating the CosmosMsgIndexed.
-	StoreMsgLeverageLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash []byte, msg types.MsgLeverageLiquidate) (err error)
+	StoreMsgLeverageLiquidate(ctx context.Context, chainInfo types.ChainInfo, blockHeight, blockTimeUnix int, txHash string, msg types.MsgLeverageLiquidate) (err error)
 	// GetLiquidateMsgs returns all the msgs liquidate filtering by the borrower.
 	GetLiquidateMsgs(ctx context.Context, chainID string, borrower string) (txs []*types.IndexedTx, err error)
 }
