@@ -2,5 +2,4 @@ database/firebase/umee-testnet-alpha-firebase-adminsdk-h6sz1-529e9aecbe.json
 build/
 *.log
 .vscode
-.env
 __debug_bin*
