@@ -10,6 +10,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o indexer .
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates bash
 WORKDIR /root/
-COPY --from=builder /app/indexer .
+COPY --from=builder /app/indexer /usr/bin
+COPY --from=builder /app/.env .
 EXPOSE 8080
-CMD ["./indexer", "start", "--api"]
+CMD ["indexer", "start", "--block", "8713586" , "--api"]
